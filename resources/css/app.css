@@ -1,0 +1,13 @@
+/* Preeti फन्ट परिभाषित गर्ने */
+@font-face {
+    font-family: 'Preeti';
+    src: url('/fonts/preeti.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* अन्य अस्थायी फन्ट परिभाषाहरू */
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+@import 'variables';
+@import 'bootstrap/scss/bootstrap';
