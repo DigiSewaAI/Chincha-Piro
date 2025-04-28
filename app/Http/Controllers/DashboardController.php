@@ -1,6 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Order;
+use App\Models\Reservation;
+use App\Models\Menu;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -31,13 +35,21 @@ class DashboardController extends Controller
         $chartLabels = ['बैशाख', 'जेठ', 'असार', 'साउन', 'भदौ', 'असोज'];
         $chartData = [65000, 59000, 80000, 81000, 56000, 75000];
 
+        // ✅ Add these missing variables for dashboard
+        $todayReservations = Reservation::whereDate('created_at', today())->count();
+        $todayOrders = Order::whereDate('created_at', today())->count();
+        $menuCount = Menu::count();
+
         return view('dashboard', compact(
             'user',
             'activeUsers',
             'totalActiveUsers',
             'recentOrders',
             'chartLabels',
-            'chartData'
+            'chartData',
+            'todayReservations',
+            'todayOrders',
+            'menuCount'
         ));
     }
 }

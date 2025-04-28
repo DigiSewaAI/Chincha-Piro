@@ -5,6 +5,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ReservationController;
+
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -44,4 +49,9 @@ Route::middleware(['auth', 'verified'])
             ->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])
             ->name('profile.destroy');
+        Route::get('/menu', [MenuController::class, 'index'])->name('menu');
+        Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
+        Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+        Route::resource('reservations', ReservationController::class);
+
     });
