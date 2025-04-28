@@ -53,5 +53,6 @@ Route::middleware(['auth', 'verified'])
         Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
         Route::get('/contact', [ContactController::class, 'index'])->name('contact');
         Route::resource('reservations', ReservationController::class);
+        Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 
     });
