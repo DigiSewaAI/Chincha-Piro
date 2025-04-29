@@ -28,6 +28,11 @@ Route::prefix('admin')
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])
             ->name('dashboard');
         Route::resource('orders', OrderController::class);
+
+        // Add more admin routes here as needed
+        Route::get('/settings', function () {
+            return view('admin.settings');
+        })->name('settings');
     });
 
 // User Protected Routes
@@ -58,4 +63,17 @@ Route::middleware(['auth', 'verified'])
         Route::get('/contact', [ContactController::class, 'index'])->name('contact');
         Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
+        // Additional user routes
+        Route::get('/booking/history', function () {
+            return view('user.booking-history');
+        })->name('booking.history');
     });
+
+// Additional public routes if needed
+Route::get('/about', function () {
+    return view('public.about');
+})->name('about');
+
+Route::get('/services', function () {
+    return view('public.services');
+})->name('services');
