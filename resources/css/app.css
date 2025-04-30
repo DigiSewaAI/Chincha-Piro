@@ -6,8 +6,39 @@
     font-style: normal;
 }
 
-/* अन्य अस्थायी फन्ट परिभाषाहरू */
+/* Google Fonts आयात */
 @import url('https://fonts.bunny.net/css?family=Nunito');
 
+/* Bootstrap र भेरिएबल्स आयात */
 @import 'variables';
 @import 'bootstrap/scss/bootstrap';
+
+/* अनुवाद बटनको लागि मूल शैली (light mode) */
+#translateBtn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 25px;
+    background: #dc2626; /* चिञ्चा पिरोको रेड कलर */
+    color: white;
+    border-radius: 9999px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    transition: all 0.3s ease;
+    font-family: 'Preeti', sans-serif;
+}
+
+#translateBtn:hover {
+    background: #b91c1c;
+    transform: translateY(-2px);
+}
+
+/* डार्क मोडका लागि अनुवाद बटनको शैली */
+.dark #translateBtn {
+    background: #7f1d1d;
+    color: #fecaca;
+}
+
+.dark #translateBtn:hover {
+    background: #991b1b;
+}

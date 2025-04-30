@@ -9,16 +9,15 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
     <!-- Heroicons -->
     <script src="https://unpkg.com/@heroicons/v2/24/outline/index.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
         .sidebar-transition { transition: all 0.3s ease; }
+
         @font-face {
             font-family: 'Preeti';
             src: url('/fonts/preeti.ttf') format('truetype');
@@ -31,7 +30,6 @@
         <!-- साइडबार -->
         <aside class="sidebar-transition bg-white dark:bg-gray-800 shadow-lg z-20"
                :class="sidebarOpen ? 'w-64' : 'w-16'">
-
             <!-- साइडबार हेडर -->
             <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
                 <span x-show="sidebarOpen" class="text-xl font-bold text-red-600 dark:text-red-400 nepali-font">
@@ -43,7 +41,6 @@
                     </svg>
                 </button>
             </div>
-
             <!-- नेभिगेसन मेनु -->
             <nav class="mt-4">
                 <a href="{{ route('home') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group">
@@ -52,7 +49,6 @@
                     </svg>
                     <span x-show="sidebarOpen" class="flex-1 nepali-font">मुख्य पृष्ठ</span>
                 </a>
-
                 @foreach ([
                     ['route' => 'dashboard', 'label' => 'ड्यासबोर्ड', 'icon' => 'chart-bar'],
                     ['route' => 'menu', 'label' => 'मेनु व्यवस्थापन', 'icon' => 'book-open'],
@@ -76,7 +72,6 @@
                 @endforeach
             </nav>
         </aside>
-
         <!-- मुख्य कन्टेन्ट -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- टप हेडर -->
@@ -89,7 +84,6 @@
                     </a>
                     <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-200 nepali-font">@yield('title')</h1>
                 </div>
-
                 <!-- सामाजिक सञ्जाल र डार्क मोड -->
                 <div class="flex items-center space-x-6">
                     <div class="flex space-x-4">
@@ -113,7 +107,6 @@
                     </button>
                 </div>
             </header>
-
             <!-- मुख्य कन्टेन्ट -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
                 <div class="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-6 nepali-font">
@@ -126,7 +119,14 @@
         </div>
     </div>
 
-    <!-- चार्ट.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</body>
-</html>
+    <!-- WhatsApp बटन -->
+<a href="https://wa.me/9779846216711"
+target="_blank"
+class="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110"
+aria-label="WhatsApp us">
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+    <path fill="#25D366" d="M15 0a15 15 0 1 0 0 30 15 15 0 0 0 0-30"/>
+    <path fill="#FFF" d="M6.6 23.3l1.1-4.1a9.6 9.6 0 0 1-1.3-4.8c0-5.3 4.3-9.6 9.6-9.6 2.6 0 5 1 6.8 2.8a9.5 9.5 0 0 1 2.8 6.8c0 5.3-4.3 9.6-9.6 9.6h-0.1a9.6 9.6 0 0 1-4.6-1.2l-4.2 1.1 1.1-4z"/>
+    <path fill="#FFF" d="M12.3 10.5l-1.9-.3c-.6 0-1.1.3-1.4.8-0.3.5-1.1 1.8-1.1 3.5 0 1.7.7 3.3 1.3 4.4 0.6 1.1 2.1 2.4 4.4 2.4 1.8 0 2.8-0.7 3.2-1.1 0.4-0.4 0.7-1 0.7-1.6 0-0.3-0.1-0.5-0.3-0.7l-1.1-1.1c-0.2-0.2-0.5-0.3-0.7-0.3-0.1 0-0.3 0-0.4 0.1l-1.6 0.9c-0.2 0.1-0.4 0.1-0.6-0.1-0.5-0.5-1-1.2-1.3-1.8-0.1-0.2-0.1-0.4 0.1-0.6l0.6-0.7c0.2-0.2 0.3-0.4 0.3-0.7 0-0.3-0.1-0.5-0.3-0.7l-0.6-0.6c-0.2-0.2-0.5-0.3-0.7-0.3-0.3 0-0.6 0.2-0.8 0.4-0.5 0.5-0.9 1.3-0.9 2.1 0 0.8 0.3 1.6 0.8 2.3 0.5 0.7 1.2 1.3 2.1 1.6 0.9 0.3 1.8 0.4 2.7 0.1 0.9-0.3 1.6-0.9 2.1-1.7 0.5-0.8 0.8-1.8 0.8-2.8 0-1.7-0.7-3.3-2-4.5-1.3-1.2-3-1.9-4.8-1.9z"/>
+</svg>
+</a>

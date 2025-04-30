@@ -10,6 +10,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\TranslateController; // नयाँ अनुवाद कण्ट्रोलर थपियो
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -62,6 +63,10 @@ Route::middleware(['auth', 'verified'])
             return view('user.booking-history');
         })->name('booking.history');
     });
+
+// Translation Routes (थपिएका अनुवाद रूटहरू)
+Route::get('/translate', [TranslateController::class, 'show'])->name('translate');
+Route::post('/translate-text', [TranslateController::class, 'translate'])->name('translate.text');
 
 // Additional public routes
 Route::get('/about', function () {
