@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class HomeController extends Controller
 {
@@ -17,55 +18,32 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application dashboard.
+     * Show the application home page.
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index()
     {
-        $signatureDishes = [
-            [
-                'id' => 1,
-                'name' => 'चिप्ले चिञ्चा मासु',
-                'price' => 599,
-                'spice_level' => 3,
-                'description' => 'मसालेदार मासुको विशेषतया चिचड़ीको स्वादमा तलेको।',
-                'image' => 'images/chichhena-masu.jpg'
-            ],
-            [
-                'id' => 2,
-                'name' => 'खसीको मासुको तोरी',
-                'price' => 699,
-                'spice_level' => 4,
-                'description' => 'खसीको मासुलाई खास ढंगले तलेको विशेष आइटम।',
-                'image' => 'images/khasi-tori.jpg'
-            ],
-            [
-                'id' => 3,
-                'name' => 'दालभात सेट',
-                'price' => 299,
-                'spice_level' => 2,
-                'description' => 'नेपालीको मनपर्ने परम्परागत भोजन सेट।',
-                'image' => 'images/dalbhat-set.jpg'
-            ],
-            [
-                'id' => 4,
-                'name' => 'मकैको रोटी',
-                'price' => 150,
-                'spice_level' => 1,
-                'description' => 'गाउँघरको स्वादको मकैको रोटी।',
-                'image' => 'images/makai_roti.jpg'
-            ],
-            [
-                'id' => 5,
-                'name' => 'अचार मिक्स प्लेट',
-                'price' => 199,
-                'spice_level' => 5,
-                'description' => 'विभिन्न प्रकारका नेपाली अचारको मिक्स।',
-                'image' => 'images/achar_plate.jpg'
-            ]
-        ];
+        // public/images/dishes/dish*.jpg फोल्डरभित्रका सबै JPG फाइलहरू खोज्छ
+        $files = File::glob(public_path('images/dishes/dish*.jpg'));
 
+        // प्रत्येक फाइलबाट आवश्यक जानकारी बनाएर कलेक्शन तयार पार्छ
+        $signatureDishes = collect($files)->map(function ($fullPath) {
+            $filename = basename($fullPath); // e.g. 'dish1.jpg'
+            $name     = pathinfo($filename, PATHINFO_FILENAME); // 'dish1'
+
+            // यहाँ तपाईं Description, Price, Spice_Level आदि DB वा अन्‍य स्रोतबाट लोड गर्न सक्नुहुन्छ।
+            return [
+                'id'           => $name,
+                'name'         => ucfirst($name),     // Dish1 → Dish1
+                'desc'         => '',                 // पछि सेट गर्नुहोस्
+                'price'        => '',                 // पछि सेट गर्नुहोस्
+                'spice_level'  => 0,                  // default
+                'image'        => "images/dishes/{$filename}",
+            ];
+        })->all();
+
+        // View मा पठाउँछ
         return view('home', compact('signatureDishes'));
     }
 }
