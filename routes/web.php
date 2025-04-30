@@ -25,11 +25,8 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified'])
     ->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'adminIndex'])
-            ->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
         Route::resource('orders', OrderController::class);
-
-        // Add more admin routes here as needed
         Route::get('/settings', function () {
             return view('admin.settings');
         })->name('settings');
@@ -39,23 +36,20 @@ Route::prefix('admin')
 Route::middleware(['auth', 'verified'])
     ->group(function () {
         // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'userIndex'])
-            ->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
 
         // Orders
         Route::resource('orders', OrderController::class);
 
         // Reservations
-        Route::resource('reservations', ReservationController::class)
-             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('reservations', ReservationController::class)->only([
+            'index', 'create', 'store', 'edit', 'update', 'destroy'
+        ]);
 
         // Profile
-        Route::get('/profile', [ProfileController::class, 'edit'])
-            ->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])
-            ->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])
-            ->name('profile.destroy');
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         // Menu, Gallery, Contact
         Route::get('/menu', [MenuController::class, 'index'])->name('menu');
@@ -69,7 +63,7 @@ Route::middleware(['auth', 'verified'])
         })->name('booking.history');
     });
 
-// Additional public routes if needed
+// Additional public routes
 Route::get('/about', function () {
     return view('public.about');
 })->name('about');
