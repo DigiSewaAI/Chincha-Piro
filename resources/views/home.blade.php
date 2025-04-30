@@ -81,35 +81,6 @@
       </div>
     </div>
   </section>
-
-  <!-- सम्पर्क सेक्सन -->
-  <section class="bg-gray-800 text-white py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-3 gap-8 items-center">
-        <div class="text-center md:text-left">
-          <h3 class="text-2xl font-bold mb-4 nepali-font">हाम्रो ठेगाना</h3>
-          <p class="text-gray-300 nepali-font">
-            काठमाडौं-३२, टिन्कुने<br>
-            गैरिगाउ, चिञ्‍चा पिरो भवन
-          </p>
-        </div>
-        <div class="text-center">
-          <h3 class="text-2xl font-bold mb-4 nepali-font">सम्पर्क</h3>
-          <p class="text-gray-300 nepali-font">
-            📞 ०१-४११२४४८<br>
-            📱 ९८४६२१६७११
-          </p>
-        </div>
-        <div class="text-center md:text-right">
-          <h3 class="text-2xl font-bold mb-4 nepali-font">सामाजिक सञ्जाल</h3>
-          <div class="flex justify-center md:justify-end space-x-4">
-            <a href="#" class="text-white hover:text-red-500">{{-- SVG --}}</a>
-            <a href="#" class="text-white hover:text-red-500">{{-- SVG --}}</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 @endsection
 
 @push('styles')
