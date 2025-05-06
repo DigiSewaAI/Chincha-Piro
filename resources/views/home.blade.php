@@ -97,3 +97,5 @@
   .shadow-hover:hover { box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); }
 </style>
 @endpush
+
+
