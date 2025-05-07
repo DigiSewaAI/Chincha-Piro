@@ -3,6 +3,7 @@
       x-init="() => { if (darkMode) document.documentElement.classList.add('dark'); }"
       :class="{'dark': darkMode}">
 <head>
+    @livewireStyles
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>चिञ्‍चा पिरो - @yield('title')</title>
@@ -183,5 +184,6 @@
 
     <!-- चार्ट.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @livewireScripts
 </body>
 </html>

@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Dish;
 use Illuminate\Http\Request;
-use App\Events\NewOrderNotification;
+use App\Events\NewOrderEvent; // Import Event Class
 
 class OrderController extends Controller
 {
@@ -22,6 +23,7 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. Validate the request
         $validated = $request->validate([
             'dish_id' => 'required|exists:dishes,id',
             'quantity' => 'required|integer|min:1|max:10',
@@ -31,20 +33,27 @@ class OrderController extends Controller
             'special_instructions' => 'nullable|string'
         ]);
 
-        // Calculate amount dynamically (if Dish price is needed)
-        $dish = \App\Models\Dish::findOrFail($validated['dish_id']);
-        $validated['amount'] = $dish->price * $validated['quantity'];
-        $validated['status'] = 'पुष्टि हुन बाँकी'; // default status
+        // 2. Calculate total price
+        $dish = Dish::findOrFail($validated['dish_id']);
+        $total = $dish->price * $validated['quantity'];
 
-        $order = Order::create($validated);
-
-        // Send real-time notification
-        broadcast(new NewOrderNotification($order))->toOthers();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'अर्डर सफल भयो! हामी तपाईंलाई ३० मिनेट भित्र फोन गर्नेछौं'
+        // 3. Create order
+        $order = Order::create([
+            'dish_id' => $validated['dish_id'],
+            'quantity' => $validated['quantity'],
+            'total_price' => $total,
+            'customer_name' => $validated['customer_name'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'special_instructions' => $validated['special_instructions'] ?? null,
+            'status' => 'पुष्टि हुन बाँकी'
         ]);
+
+        // 4. Broadcast real-time notification
+        broadcast(new NewOrderEvent($order))->toOthers();
+
+        // 5. Redirect back with success message
+        return back()->with('success', 'अर्डर सफल भयो! हामी तपाईंलाई ३० मिनेट भित्र फोन गर्नेछौं');
     }
 
     /**
@@ -62,5 +71,28 @@ class OrderController extends Controller
     {
         $order->delete();
         return redirect()->back()->with('success', 'Order हटाइयो।');
+    }
+
+    /**
+     * Track an order by ID.
+     */
+    public function track(Order $order)
+    {
+        // Order अवस्थित छ कि जाँच गर्नुहोस्
+        if (!$order->exists) {
+            return redirect()->route('home')->with('error', 'अर्डर भेटिएन');
+        }
+
+        return view('orders.track', compact('order'));
+    }
+
+    /**
+     * Update order status via admin panel.
+     */
+    public function updateStatus(Request $request, Order $order)
+    {
+        $request->validate(['status' => 'required|string']);
+        $order->update(['status' => $request->status]);
+        return back()->with('success', 'अर्डर स्थिति अपडेट भयो!');
     }
 }

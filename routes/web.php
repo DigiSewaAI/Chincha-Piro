@@ -10,10 +10,11 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ReservationController;
-use App\Http\Controllers\TranslateController; // नयाँ अनुवाद कण्ट्रोलर थपियो
+use App\Http\Controllers\TranslateController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/orders/{id}/track', [OrderController::class, 'track'])->name('orders.track');
 
 // Authentication Routes
 require __DIR__ . '/auth.php';
@@ -28,6 +29,7 @@ Route::prefix('admin')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
         Route::resource('orders', OrderController::class);
+        Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
         Route::get('/settings', function () {
             return view('admin.settings');
         })->name('settings');
@@ -64,7 +66,7 @@ Route::middleware(['auth', 'verified'])
         })->name('booking.history');
     });
 
-// Translation Routes (थपिएका अनुवाद रूटहरू)
+// Translation Routes
 Route::get('/translate', [TranslateController::class, 'show'])->name('translate');
 Route::post('/translate-text', [TranslateController::class, 'translate'])->name('translate.text');
 

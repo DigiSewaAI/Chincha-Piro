@@ -7,19 +7,39 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'dish_id', 'amount', 'status'];
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'dish_id',
+        'quantity',
+        'total_price',
+        'customer_name',
+        'phone',
+        'address',
+        'status'
+    ];
 
+    /**
+     * Casts for attributes.
+     */
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i',
     ];
 
-    // Relation to Dish
+    /**
+     * Relation to Dish model.
+     */
     public function dish(): BelongsTo
     {
         return $this->belongsTo(Dish::class);
     }
 
-    // Status color accessor
+    /**
+     * Status color attribute accessor.
+     */
     public function getStatusColorAttribute(): string
     {
         return match($this->status) {

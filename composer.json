@@ -8,11 +8,14 @@
         "php": "^8.1",
         "backpack/crud": "^6.8",
         "backpack/theme-tabler": "^1.2",
+        "beyondcode/laravel-websockets": "^1.13",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "laravel/ui": "^4.6",
+        "livewire/livewire": "^3.6",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "^6.17"
     },
     "require-dev": {

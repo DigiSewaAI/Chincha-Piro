@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
+use App\Models\Dish; // Dish मोडल आयात गरिएको
 
 class HomeController extends Controller
 {
@@ -18,32 +18,69 @@ class HomeController extends Controller
     }
 
     /**
-     * Show the application home page.
+     * Show the application home page with dynamic dishes from the database.
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index()
     {
-        // public/images/dishes/dish*.jpg फोल्डरभित्रका सबै JPG फाइलहरू खोज्छ
-        $files = File::glob(public_path('images/dishes/dish*.jpg'));
+        // 1. सबै डिशहरू डाटाबेसबाट लोड गर्नुहोस्, images सम्बन्धित छ भने
+        $dishes = Dish::with('images')->get();
 
-        // प्रत्येक फाइलबाट आवश्यक जानकारी बनाएर कलेक्शन तयार पार्छ
-        $signatureDishes = collect($files)->map(function ($fullPath) {
-            $filename = basename($fullPath); // e.g. 'dish1.jpg'
-            $name     = pathinfo($filename, PATHINFO_FILENAME); // 'dish1'
+        // 2. View मा पठाउनुहोस्
+        return view('home', compact('dishes'));
+    }
 
-            // यहाँ तपाईं Description, Price, Spice_Level आदि DB वा अन्‍य स्रोतबाट लोड गर्न सक्नुहुन्छ।
-            return [
-                'id'           => $name,
-                'name'         => ucfirst($name),     // Dish1 → Dish1
-                'desc'         => '',                 // पछि सेट गर्नुहोस्
-                'price'        => '',                 // पछि सेट गर्नुहोस्
-                'spice_level'  => 0,                  // default
-                'image'        => "images/dishes/{$filename}",
-            ];
-        })->all();
+    /**
+     * Show a specific dish in detail.
+     */
+    public function show(Dish $dish)
+    {
+        return view('dishes.show', compact('dish'));
+    }
 
-        // View मा पठाउँछ
-        return view('home', compact('signatureDishes'));
+    /**
+     * Store a new dish via API or form submission (if applicable).
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'spice_level' => 'required|integer|min:0|max:5',
+            'image' => 'required|string|max:255'
+        ]);
+
+        Dish::create($validated);
+
+        return back()->with('success', 'डिश सफलतापूर्वक थपियो!');
+    }
+
+    /**
+     * Update an existing dish.
+     */
+    public function update(Request $request, Dish $dish)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'spice_level' => 'required|integer|min:0|max:5',
+            'image' => 'required|string|max:255'
+        ]);
+
+        $dish->update($validated);
+
+        return back()->with('success', 'डिश अपडेट भयो!');
+    }
+
+    /**
+     * Delete a dish.
+     */
+    public function destroy(Dish $dish)
+    {
+        $dish->delete();
+        return back()->with('success', 'डिश हटाइयो!');
     }
 }
