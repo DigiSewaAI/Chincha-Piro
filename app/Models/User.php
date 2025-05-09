@@ -21,7 +21,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'is_active', // Ensure this column exists in your database
+        'role',        // ✅ नयाँ थपिएको (admin/user)
+        'is_active',   // ✅ पहिलेदेखि उपलब्ध
     ];
 
     /**
@@ -44,18 +45,25 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    // Local Scope for active users
+    /**
+     * Local Scope: Active Users Only
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
-    // Relationships
+    /**
+     * Relationship: User has many Orders
+     */
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
 
+    /**
+     * Relationship: User has many Reservations
+     */
     public function reservations()
     {
         return $this->hasMany(Reservation::class);

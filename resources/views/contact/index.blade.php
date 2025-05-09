@@ -22,14 +22,26 @@
             <!-- Address -->
             <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">📍 हाम्रो ठेगाना</h3>
-                <p class="nepali-font">काठमाडौँ-३२, टिन्कुने<br>गैरिगाउ, चिञ्चा पिरो भवन</p>
+                <p class="nepali-font">{{ $contactInfo['address'] }}</p> <!-- ✅ Dynamic Data -->
             </div>
 
             <!-- Phone -->
             <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">📞 सम्पर्क नम्बर</h3>
-                <p>०१-४११२४४८</p>
-                <p>९८४६२१६७११ (WhatsApp)</p>
+                <p>{{ $contactInfo['phone'] }}</p> <!-- ✅ Dynamic Data -->
+                <p>{{ $contactInfo['mobile'] }} (WhatsApp)</p> <!-- ✅ Dynamic Data -->
+            </div>
+
+            <!-- Email -->
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">✉️ इमेल</h3>
+                <p>{{ $contactInfo['email'] }}</p> <!-- ✅ Dynamic Data -->
+            </div>
+
+            <!-- Business Hours -->
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">⏰ सेवा समय</h3>
+                <p>{{ $contactInfo['business_hours'] }}</p> <!-- ✅ Dynamic Data -->
             </div>
 
             <!-- Social Media -->

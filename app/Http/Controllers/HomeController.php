@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Dish; // Dish मोडल आयात गरिएको
+use App\Models\Dish;
 
 class HomeController extends Controller
 {
@@ -24,8 +24,8 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // 1. सबै डिशहरू डाटाबेसबाट लोड गर्नुहोस्, images सम्बन्धित छ भने
-        $dishes = Dish::with('images')->get();
+        // 1. सबै डिशहरू DB बाट लोड (single-image field प्रयोग)
+        $dishes = Dish::all();
 
         // 2. View मा पठाउनुहोस्
         return view('home', compact('dishes'));
@@ -33,6 +33,9 @@ class HomeController extends Controller
 
     /**
      * Show a specific dish in detail.
+     *
+     * @param  \App\Models\Dish  $dish
+     * @return \Illuminate\Contracts\Support\Renderable
      */
     public function show(Dish $dish)
     {
@@ -40,16 +43,19 @@ class HomeController extends Controller
     }
 
     /**
-     * Store a new dish via API or form submission (if applicable).
+     * Store a new dish via form submission.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name'        => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255'
+            'image'       => 'required|string|max:255', // filename only, e.g. "dish1.jpg"
         ]);
 
         Dish::create($validated);
@@ -59,15 +65,19 @@ class HomeController extends Controller
 
     /**
      * Update an existing dish.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Dish  $dish
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Dish $dish)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name'        => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255'
+            'image'       => 'required|string|max:255',
         ]);
 
         $dish->update($validated);
@@ -77,6 +87,9 @@ class HomeController extends Controller
 
     /**
      * Delete a dish.
+     *
+     * @param  \App\Models\Dish  $dish
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Dish $dish)
     {

@@ -46,18 +46,16 @@
 
       <div class="grid md:grid-cols-3 gap-8">
         @foreach($dishes as $dish)
-          <div class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden transition-all duration-300">
+          <div class="group bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden transition-all duration-300 shadow-hover">
             <div class="relative h-60">
-              <!-- Lazy Loading + Error Handling + Alpine.js Intersection Observer -->
               <img
-                src="{{ asset('storage/' . $dish->image) }}"
+                src="{{ $dish->image_url }}"
                 alt="{{ $dish->name }}"
                 loading="lazy"
                 onerror="this.onerror=null; this.src='{{ asset('images/placeholder.jpg') }}';"
                 class="w-full h-full object-cover transition-opacity duration-300 opacity-0"
                 x-intersect.once="el.classList.add('opacity-100')"
               >
-              <!-- Overlay Content -->
               <div class="absolute inset-0 bg-gradient-to-t from-black/60"></div>
               <div class="absolute bottom-0 left-0 right-0 p-4">
                 <h3 class="text-2xl font-bold text-white nepali-font mb-2">
@@ -77,81 +75,52 @@
                 </p>
               @endif
 
-              <!-- Order Button with Modal -->
               <div x-data="{ showOrderModal: false }">
                 <button
-                    @click="showOrderModal = true"
-                    class="bg-red-600 text-white px-4 py-2 rounded-full nepali-font hover:bg-red-700 transition-colors"
+                  @click="showOrderModal = true"
+                  class="bg-red-600 text-white px-4 py-2 rounded-full nepali-font hover:bg-red-700 transition-colors"
                 >
-                    📌 अर्डर गर्नुहोस्
+                  📌 अर्डर गर्नुहोस्
                 </button>
 
-                <!-- Order Modal -->
-                <div x-show="showOrderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div class="bg-white rounded-xl max-w-sm w-full p-6" @click.outside="showOrderModal = false">
-                        <h3 class="text-2xl nepali-font font-bold mb-4">{{ $dish->name }}</h3>
+                <div
+                  x-show="showOrderModal"
+                  x-cloak
+                  class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                >
+                  <div class="bg-white rounded-xl max-w-sm w-full p-6" @click.outside="showOrderModal = false">
+                    <h3 class="text-2xl nepali-font font-bold mb-4">{{ $dish->name }}</h3>
 
-                        <form action="{{ route('orders.store') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="dish_id" value="{{ $dish->id }}">
+                    <form action="{{ route('orders.store') }}" method="POST">
+                      @csrf
+                      <input type="hidden" name="dish_id" value="{{ $dish->id }}">
 
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="nepali-font block mb-2">मात्रा:</label>
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        min="1"
-                                        max="10"
-                                        value="1"
-                                        class="w-full border rounded-lg p-2 nepali-font"
-                                        required
-                                    >
-                                </div>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="nepali-font block mb-2">मात्रा:</label>
+                          <input
+                            type="number"
+                            name="quantity"
+                            min="1"
+                            max="10"
+                            value="1"
+                            class="w-full border rounded-lg p-2 nepali-font"
+                            required
+                          >
+                        </div>
 
-                                <div>
-                                    <label class="nepali-font block mb-2">ग्राहकको नाम:</label>
-                                    <input
-                                        type="text"
-                                        name="customer_name"
-                                        class="w-full border rounded-lg p-2 nepali-font"
-                                        required
-                                    >
-                                </div>
-
-                                <div>
-                                    <label class="nepali-font block mb-2">ठेगाना:</label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        class="w-full border rounded-lg p-2 nepali-font"
-                                        required
-                                    >
-                                </div>
-
-                                <div>
-                                    <label class="nepali-font block mb-2">फोन नम्बर:</label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        pattern="^98\d{8}$"
-                                        title="98XXXXXXXX ढाँचामा हुनुपर्छ"
-                                        class="w-full border rounded-lg p-2 nepali-font"
-                                        required
-                                    >
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="w-full bg-red-600 text-white py-2 rounded-full nepali-font"
-                                >
-                                    अर्डर पेश गर्नुहोस्
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <button
+                          type="submit"
+                          class="w-full bg-red-600 text-white py-2 rounded-full nepali-font"
+                        >
+                          अर्डर पेश गर्नुहोस् (रु {{ number_format($dish->price, 2) }})
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
               </div>
+
             </div>
           </div>
         @endforeach
@@ -165,13 +134,11 @@
   .nepali-font {
     font-family: 'Preeti', 'Noto Sans Devanagari', sans-serif;
   }
-
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0);   }
   }
   .animate-fadeInUp { animation: fadeInUp 1s ease-out; }
-
   .shadow-hover { transition: box-shadow 0.3s ease; }
   .shadow-hover:hover { box-shadow: 0 10px 30px rgba(220, 38, 38, 0.2); }
 </style>

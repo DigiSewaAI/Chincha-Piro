@@ -13,13 +13,26 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dish_id')->constrained()->onDelete('cascade');
+
+            // User ID (Foreign Key)
+            $table->foreignId('user_id')
+                  ->constrained()
+                  ->onDelete('cascade'); // User हटाएमा सँगै Order पनि हटाउनुहोस्
+
+            // Dish ID (Existing Foreign Key)
+            $table->foreignId('dish_id')
+                  ->constrained()
+                  ->onDelete('cascade');
+
+            // Order Details
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('total_price', 10, 2)->nullable();
             $table->string('customer_name', 100)->nullable();
-            $table->string('phone', 15)->nullable();
+            $table->string('phone', 20)->nullable();
             $table->text('address')->nullable();
             $table->text('special_instructions')->nullable();
+
+            // Status & Timestamps
             $table->enum('status', ['pending', 'processing', 'completed'])->default('pending');
             $table->timestamps();
 

@@ -1,8 +1,16 @@
-// 1. Font Import
+// 1. Font Import (must be at top)
 @import url('https://fonts.bunny.net/css?family=Nunito');
 
-// 2. Variables (Local File)
+// 2. Variables (local overrides)
 @import 'variables';
 
-// 3. Bootstrap Framework
+// 3. Bootstrap framework
 @import 'bootstrap/scss/bootstrap';
+
+// 4. Your custom styles below
+body {
+  // ...
+}
+
+// Place any other @import rules here only if absolutely needed,
+// but always keep them above any plain CSS.

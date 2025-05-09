@@ -10,10 +10,20 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    /**
+     * Admin Dashboard प्रदर्शन गर्नुहोस्
+     */
     public function adminIndex()
     {
+        // Active Users (5 ओटा मात्र)
         $activeUsers = User::where('is_active', true)->latest()->take(5)->get();
-        $recentOrders = Order::with('user')->latest()->limit(5)->get();
+
+        // Recent Orders with User (केवल Userको id र name)
+        $recentOrders = Order::with(['user' => function ($query) {
+            $query->select('id', 'name', 'email'); // 'user_id' छैन, किनकि User.id = Order.user_id
+        }])->latest()->limit(5)->get();
+
+        // Chart Data
         $chartLabels = ['बैशाख', 'जेठ', 'असार', 'साउन', 'भदौ', 'असोज'];
         $chartData = [65000, 59000, 80000, 81000, 56000, 75000];
 
@@ -25,17 +35,29 @@ class DashboardController extends Controller
         ));
     }
 
+    /**
+     * User Dashboard प्रदर्शन गर्नुहोस्
+     */
     public function userIndex(Request $request)
     {
         $user = $request->user();
-        $activeUsers = User::where('is_active', true)->latest()->take(5)->get();
-        $totalActiveUsers = User::where('is_active', true)->count();
-        $recentOrders = Order::with('user')->latest()->limit(5)->get();
 
+        // Active Users (5 ओटा मात्र)
+        $activeUsers = User::where('is_active', true)->latest()->take(5)->get();
+
+        // Total Active Users
+        $totalActiveUsers = User::where('is_active', true)->count();
+
+        // Recent Orders with User (केवल Userको id र name)
+        $recentOrders = Order::with(['user' => function ($query) {
+            $query->select('id', 'name', 'email');
+        }])->latest()->limit(5)->get();
+
+        // Chart Data
         $chartLabels = ['बैशाख', 'जेठ', 'असार', 'साउन', 'भदौ', 'असोज'];
         $chartData = [65000, 59000, 80000, 81000, 56000, 75000];
 
-        // ✅ Add these missing variables for dashboard
+        // Dashboard Statistics
         $todayReservations = Reservation::whereDate('created_at', today())->count();
         $todayOrders = Order::whereDate('created_at', today())->count();
         $menuCount = Menu::count();

@@ -39,6 +39,7 @@ class OrderController extends Controller
 
         // 3. Create order
         $order = Order::create([
+            'user_id' => auth()->id(), // ✅ Authenticated user ID
             'dish_id' => $validated['dish_id'],
             'quantity' => $validated['quantity'],
             'total_price' => $total,

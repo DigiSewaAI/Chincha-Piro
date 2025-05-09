@@ -52,7 +52,7 @@
                 </a>
                 @foreach ([
                     ['route' => 'dashboard', 'label' => 'ड्यासबोर्ड', 'icon' => 'chart-bar'],
-                    ['route' => 'menu', 'label' => 'मेनु व्यवस्थापन', 'icon' => 'book-open'],
+                    ['route' => 'menu.index', 'label' => 'मेनु व्यवस्थापन', 'icon' => 'book-open'],
                     ['route' => 'gallery', 'label' => 'फोटो ग्यालरी', 'icon' => 'photo'],
                     ['route' => 'contact', 'label' => 'सम्पर्क जानकारी', 'icon' => 'phone'],
                 ] as $item)

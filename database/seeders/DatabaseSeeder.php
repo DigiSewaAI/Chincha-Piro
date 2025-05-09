@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Database\Seeders\DishSeeder;   // DishSeeder आयात गरियो
-use Database\Seeders\OrderSeeder; // OrderSeeder आयात गरियो
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,14 +11,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // पहिले DishSeeder चलाउनुहोस् (Orderहरूले dish_id मान्छन्)
+        // ✅ सीडरहरूको क्रम समायोजन गरिएको (अस्तित्वमा रहेको फाइलहरूको लागि)
         $this->call([
-            DishSeeder::class,
-        ]);
-
-        // त्यसपछि OrderSeeder चलाउनुहोस्
-        $this->call([
-            OrderSeeder::class,
+            UserSeeder::class,           // 1. पहिले UserSeeder (OrderSeeder ले user_id मान्छ)
+            MenusTableSeeder::class,     // 2. नाम परिवर्तन गरिएको (MenuSeeder सट्टा MenusTableSeeder)
+            OrderSeeder::class,          // 3. OrderSeeder (user_id र dish_id आवश्यक)
+            // ReservationSeeder::class,  // 4. आवश्यकता भएमा
+            // CategorySeeder::class,     // 5. आवश्यकता भएमा
         ]);
     }
 }

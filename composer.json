@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "anhskohbo/no-captcha": "^3.7",
         "backpack/crud": "^6.8",
         "backpack/theme-tabler": "^1.2",
         "beyondcode/laravel-websockets": "^1.13",
