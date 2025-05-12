@@ -1,44 +1,54 @@
-/* Preeti फन्ट परिभाषित गर्ने */
+/* ✅ capitalize-each-word class */
+.capitalize-each-word {
+    text-transform: capitalize;
+}
+
+/* 🚀 फन्ट लोडिङ ऑप्टिमाइजेसन (Preeti Font) */
 @font-face {
     font-family: 'Preeti';
-    src: url('/fonts/preeti.ttf') format('truetype');
+    src: local('Preeti'),
+         url('/fonts/preeti.woff2') format('woff2'),
+         url('/fonts/preeti.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
-/* Google Fonts आयात */
-@import url('https://fonts.bunny.net/css?family=Nunito');
+/* ✅ Google Fonts (Nunito) */
+@import url('https://fonts.bunny.net/css?family=nunito ');
 
-/* Bootstrap र भेरिएबल्स आयात */
-@import 'variables';
+/* ✅ बूटस्ट्रप इम्पोर्ट (सही अर्डर) */
+@import 'bootstrap/scss/functions';
+@import 'variables'; /* कस्टम भेरिएबलहरू पहिले */
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
 @import 'bootstrap/scss/bootstrap';
 
-/* अनुवाद बटनको लागि मूल शैली (light mode) */
+/* ✅ नेपाली फन्ट फलब्याक */
+.nepali-font {
+    font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', sans-serif;
+}
+
+/* ✅ ट्रान्जिसन सुधार (GPU एक्सेलेरेसन) */
 #translateBtn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    padding: 12px 25px;
-    background: #dc2626; /* चिञ्चा पिरोको रेड कलर */
-    color: white;
-    border-radius: 9999px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    z-index: 999;
-    transition: all 0.3s ease;
-    font-family: 'Preeti', sans-serif;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    will-change: transform;
 }
 
-#translateBtn:hover {
-    background: #b91c1c;
-    transform: translateY(-2px);
+/* ✅ डार्क मोड रंग सुधार */
+.dark {
+    #translateBtn {
+        background: #991b1b;  /* bg-red-900 */
+        color: #fecaca;       /* text-red-200 */
+
+        &:hover {
+            background: #7f1d1d;  /* bg-red-800 */
+        }
+    }
 }
 
-/* डार्क मोडका लागि अनुवाद बटनको शैली */
-.dark #translateBtn {
-    background: #7f1d1d;
-    color: #fecaca;
-}
-
-.dark #translateBtn:hover {
-    background: #991b1b;
+/* 🚀 SVG बेस्ड आइकन (फन्ट निर्भरता हटाउन) */
+#translateBtn::after {
+    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M13.079 2.125a3 3 0 00-2.158 0L3.05 5.05a3 3 0 00-1.856 2.773c0 2.227 1.874 3.054 4.284 3.774A4.853 4.853 0 0112 13.042a4.85 4.85 0 014.284-3.444c2.41-.72 4.284-1.547 4.284-3.774a3 3 0 00-1.856-2.773l-7.87-2.925zM12 16.042a4.85 4.85 0 01-4.284-3.444C5.306 11.987 3.432 11.16 3.432 8.9v-.032l6.698 2.49a3 3 0 002.14.094l6.698-2.49v.032c0 2.227-1.874 3.054-4.284 3.774A4.853 4.853 0 0112 16.042z"/></svg>');
+    margin-left: 8px;
 }

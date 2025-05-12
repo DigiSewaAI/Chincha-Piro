@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\User;  // User मोडेलको लागि namespace
-use App\Models\Dish;  // Dish मोडेलको लागि namespace
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+use App\Models\User;
+use App\Models\Dish;
+use App\Models\StatusHistory;
 
 class Order extends Model
 {
@@ -18,25 +21,29 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id',         // सम्बन्धित User ID
-        'dish_id',
-        'quantity',
-        'total_price',
-        'customer_name',
-        'phone',
-        'address',
-        'status'
+        'user_id',              // Related user
+        'dish_id',              // Dish ID
+        'quantity',             // Quantity
+        'total_price',          // Total price
+        'customer_name',        // Customer name
+        'phone',                // Phone number
+        'address',              // Address
+        'special_instructions', // Special instructions
+        'preferred_delivery_time', // Preferred delivery time
+        'status',               // Order status (in English)
     ];
 
     /**
-     * Casts for attributes.
+     * Attribute casting.
      */
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i',
+        'updated_at' => 'datetime:Y-m-d H:i',
+        'preferred_delivery_time' => 'datetime',
     ];
 
     /**
-     * Relation to Dish model.
+     * Relationship to the Dish model.
      */
     public function dish(): BelongsTo
     {
@@ -44,7 +51,7 @@ class Order extends Model
     }
 
     /**
-     * Relation to User model.
+     * Relationship to the User model.
      */
     public function user(): BelongsTo
     {
@@ -52,14 +59,25 @@ class Order extends Model
     }
 
     /**
-     * Status color attribute accessor.
+     * Relationship to the StatusHistory model.
+     */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(StatusHistory::class);
+    }
+
+    /**
+     * Accessor for status color class.
      */
     public function getStatusColorAttribute(): string
     {
         return match ($this->status) {
-            'पूरा भयो' => 'bg-green-100 text-green-600',
-            'पुष्टि हुन बाँकी' => 'bg-yellow-100 text-yellow-600',
-            default => 'bg-gray-100 text-gray-600',
+            'pending' => 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300',
+            'confirmed' => 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
+            'processing' => 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300',
+            'completed' => 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300',
+            'cancelled' => 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
+            default => 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
         };
     }
 }

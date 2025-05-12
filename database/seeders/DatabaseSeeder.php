@@ -11,13 +11,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // ✅ सीडरहरूको क्रम समायोजन गरिएको (अस्तित्वमा रहेको फाइलहरूको लागि)
-        $this->call([
-            UserSeeder::class,           // 1. पहिले UserSeeder (OrderSeeder ले user_id मान्छ)
-            MenusTableSeeder::class,     // 2. नाम परिवर्तन गरिएको (MenuSeeder सट्टा MenusTableSeeder)
-            OrderSeeder::class,          // 3. OrderSeeder (user_id र dish_id आवश्यक)
-            // ReservationSeeder::class,  // 4. आवश्यकता भएमा
-            // CategorySeeder::class,     // 5. आवश्यकता भएमा
-        ]);
+        // 1. First: Seed Users (Orders require user_id)
+        $this->call(UserSeeder::class);
+
+        // 2. Second: Seed Categories (Dishes require category_id)
+        $this->call(CategorySeeder::class);
+
+        // 3. Third: Seed Dishes (Use DishSeeder instead of MenusTableSeeder)
+        $this->call(DishSeeder::class);
+
+        // 4. Fourth: Seed Orders (requires valid user_id and dish_id)
+        $this->call(OrderSeeder::class);
+
+        // Optional Seeders (uncomment as needed)
+        // $this->call(ReservationSeeder::class);
+        // $this->call(TableSeeder::class);
     }
 }

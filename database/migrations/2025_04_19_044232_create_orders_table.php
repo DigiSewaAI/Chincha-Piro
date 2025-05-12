@@ -12,31 +12,31 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->id(); // Primary Key
 
-            // User ID (Foreign Key)
-            $table->foreignId('user_id')
+            // User Relation (Nullable for guest orders)
+            $table->foreignId('user_id')->nullable()
                   ->constrained()
-                  ->onDelete('cascade'); // User हटाएमा सँगै Order पनि हटाउनुहोस्
+                  ->onDelete('set null'); // Guest orders can exist without user
 
-            // Dish ID (Existing Foreign Key)
+            // Dish Relation
             $table->foreignId('dish_id')
                   ->constrained()
-                  ->onDelete('cascade');
+                  ->onDelete('cascade'); // Order deleted when dish is deleted
 
             // Order Details
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('total_price', 10, 2)->nullable();
-            $table->string('customer_name', 100)->nullable();
-            $table->string('phone', 20)->nullable();
-            $table->text('address')->nullable();
-            $table->text('special_instructions')->nullable();
+            $table->unsignedInteger('quantity')->default(1); // Minimum 1
+            $table->decimal('total_price', 10, 2); // Always set, no nullable
+            $table->string('customer_name', 100)->nullable(); // For guests
+            $table->string('phone', 20); // Required field
+            $table->text('address'); // Required field
+            $table->text('special_instructions')->nullable(); // Optional
 
             // Status & Timestamps
-            $table->enum('status', ['pending', 'processing', 'completed'])->default('pending');
+            $table->string('status')->default('pending'); // Flexible status handling
             $table->timestamps();
 
-            // Indexes
+            // Indexes for faster queries
             $table->index('status');
             $table->index('created_at');
         });

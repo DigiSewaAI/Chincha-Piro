@@ -1,9 +1,15 @@
+// tailwind.config.js
+
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
 import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+    // ✅ डार्क मोडलाई 'class' बाट सक्षम गरिएको
+    darkMode: 'class',
+
+    // 📁 सबै Blade, PHP, JS, CSS र HTML फाइलहरूमा Tailwind क्लासहरूको लागि पथहरू
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
@@ -13,20 +19,25 @@ export default {
         './public/build/**/*.html'
     ],
 
+    // 🎨 थीम विस्तार
     theme: {
         extend: {
+            // 📚 फन्ट परिवार
             fontFamily: {
                 // मूल फिगट्री फन्टको साथ स्यान्स
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                // नेपाली फन्ट (Preeti) को लागि थपिएको
+                // नेपाली फन्ट (Preeti)
                 nepali: ['Preeti', 'sans-serif']
             },
+
+            // 🎨 कस्टम रङ्गहरू
             colors: {
-                // नेपाली रङ्गहरू
-                'nepali-red': '#DC143C',
-                'nepali-blue': '#003893',
-                'nepali-green': '#228B22'
+                'nepali-red': '#DC143C',   // नेपाली रातो
+                'nepali-blue': '#003893',  // नेपाली निलो
+                'nepali-green': '#228B22'  // नेपाली हरियो
             },
+
+            // 🌀 ब्लर र छायाहरू
             backdropBlur: {
                 'lg': '12px',
                 'xl': '20px'
@@ -37,6 +48,7 @@ export default {
         },
     },
 
+    // 🧩 प्लगिनहरू
     plugins: [
         forms,
         typography

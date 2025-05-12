@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dishes', function (Blueprint $table) {
-            $table->id();
-            $table->string('image')->nullable(); // 📝 Image कलम थपिएको
-            $table->timestamps();
+        Schema::table('dishes', function (Blueprint $table) {
+            $table->boolean('is_special')->default(false)->after('price');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dishes');
+        Schema::table('dishes', function (Blueprint $table) {
+            $table->dropColumn('is_special');
+        });
     }
 };

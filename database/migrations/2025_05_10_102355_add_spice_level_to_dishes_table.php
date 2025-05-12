@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dishes', function (Blueprint $table) {
-            $table->id();
-            $table->string('image')->nullable(); // 📝 Image कलम थपिएको
-            $table->timestamps();
+        Schema::table('dishes', function (Blueprint $table) {
+            $table->tinyInteger('spice_level')
+                  ->default(1)
+                  ->comment('1-5 को स्केल');
         });
     }
 
@@ -23,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dishes');
+        Schema::table('dishes', function (Blueprint $table) {
+            $table->dropColumn('spice_level');
+        });
     }
 };

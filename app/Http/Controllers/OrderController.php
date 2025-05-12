@@ -5,64 +5,88 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Dish;
 use Illuminate\Http\Request;
-use App\Events\NewOrderEvent; // Import Event Class
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use App\Events\NewOrderEvent;
 
 class OrderController extends Controller
 {
     /**
-     * Show a list of all orders.
+     * Display the order form to the user.
      */
     public function index()
     {
-        $orders = Order::latest()->paginate(10);
-        return view('orders.index', compact('orders'));
+        // Fetch available dishes with their categories
+        $dishes = Dish::where('is_available', true)
+                      ->with('category')
+                      ->orderBy('spice_level', 'desc')
+                      ->get();
+
+        // Fetch orders for the currently authenticated user
+        $orders = Order::where('user_id', Auth::id())
+                       ->with('dish')  // Optional: Eager load dish relationship
+                       ->latest()
+                       ->get();
+
+        // Pass both dishes and orders to the view
+        return view('orders.index', compact('dishes', 'orders'));
     }
 
     /**
-     * Store a new order in the database.
+     * Admin: List all orders with filters.
+     */
+    public function listOrders()
+    {
+        $this->authorize('viewAny', Order::class);
+
+        $orders = Order::with(['user', 'dish'])
+                    ->latest()
+                    ->filter(request(['status', 'search']))
+                    ->paginate(10);
+
+        return view('admin.orders.index', compact('orders'));
+    }
+
+    /**
+     * Store a new order.
      */
     public function store(Request $request)
     {
-        // 1. Validate the request
-        $validated = $request->validate([
-            'dish_id' => 'required|exists:dishes,id',
-            'quantity' => 'required|integer|min:1|max:10',
-            'customer_name' => 'required|string|max:100',
-            'phone' => 'required|regex:/^98\d{8}$/',
-            'address' => 'required|string|max:500',
-            'special_instructions' => 'nullable|string'
-        ]);
+        $validated = $this->validateOrderRequest($request);
+        $orderData = $this->prepareOrderData($validated);
 
-        // 2. Calculate total price
-        $dish = Dish::findOrFail($validated['dish_id']);
-        $total = $dish->price * $validated['quantity'];
+        $order = Order::create($orderData);
+        $this->dispatchOrderEvents($order);
 
-        // 3. Create order
-        $order = Order::create([
-            'user_id' => auth()->id(), // ✅ Authenticated user ID
-            'dish_id' => $validated['dish_id'],
-            'quantity' => $validated['quantity'],
-            'total_price' => $total,
-            'customer_name' => $validated['customer_name'],
-            'phone' => $validated['phone'],
-            'address' => $validated['address'],
-            'special_instructions' => $validated['special_instructions'] ?? null,
-            'status' => 'पुष्टि हुन बाँकी'
-        ]);
-
-        // 4. Broadcast real-time notification
-        broadcast(new NewOrderEvent($order))->toOthers();
-
-        // 5. Redirect back with success message
-        return back()->with('success', 'अर्डर सफल भयो! हामी तपाईंलाई ३० मिनेट भित्र फोन गर्नेछौं');
+        return redirect()->route('orders.track', $order)
+               ->with('success', 'अर्डर सफल भयो! ट्र्याकिङ्ग आईडी: '.$order->id);
     }
 
     /**
-     * Show a specific order.
+     * Display the tracking page for an order.
      */
-    public function show(Order $order)
+    public function track(Order $order)
     {
-        return view('orders.show', compact('order'));
+        $statusHistory = $order->statusHistories()->latest()->get();
+        return view('orders.track', compact('order', 'statusHistory'));
+    }
+
+    /**
+     * Update order status.
+     */
+    public function updateStatus(Request $request, Order $order)
+    {
+        $this->authorize('update', $order);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,confirmed,preparing,on_delivery,completed,cancelled',
+            'notes' => 'nullable|string|max:500'
+        ]);
+
+        $order->update($validated);
+        $this->logStatusChange($order, $validated['status'], $validated['notes'] ?? null);
+
+        return back()->with('success', 'अवस्था अपडेट भयो: '.$order->status);
     }
 
     /**
@@ -70,30 +94,67 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        $this->authorize('delete', $order);
         $order->delete();
-        return redirect()->back()->with('success', 'Order हटाइयो।');
+
+        return redirect()->route('admin.orders.index')
+               ->with('info', 'अर्डर सफलतापूर्वक हटाइयो');
     }
 
-    /**
-     * Track an order by ID.
-     */
-    public function track(Order $order)
+    /**********************
+     * Private Helper Methods
+     **********************/
+
+    private function validateOrderRequest(Request $request)
     {
-        // Order अवस्थित छ कि जाँच गर्नुहोस्
-        if (!$order->exists) {
-            return redirect()->route('home')->with('error', 'अर्डर भेटिएन');
+        return $request->validate([
+            'dish_id' => 'required|exists:dishes,id',
+            'quantity' => 'required|integer|between:1,10',
+            'customer_name' => [
+                Rule::requiredIf(!Auth::check()),
+                'string',
+                'max:100'
+            ],
+            'phone' => 'required|regex:/^(98|97|96)\d{8}$/|max:10',
+            'address' => 'required|string|max:500',
+            'special_instructions' => 'nullable|string|max:1000',
+            'preferred_delivery_time' => 'nullable|date|after:now'
+        ]);
+    }
+
+    private function prepareOrderData(array $validated)
+    {
+        $dish = Dish::findOrFail($validated['dish_id']);
+
+        return [
+            'user_id' => Auth::id(),
+            'dish_id' => $validated['dish_id'],
+            'quantity' => $validated['quantity'],
+            'total_price' => $dish->price * $validated['quantity'],
+            'customer_name' => Auth::check() ? Auth::user()->name : $validated['customer_name'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'special_instructions' => $validated['special_instructions'],
+            'preferred_delivery_time' => $validated['preferred_delivery_time'],
+            'status' => 'pending'
+        ];
+    }
+
+    private function dispatchOrderEvents(Order $order)
+    {
+        event(new NewOrderEvent($order));
+
+        if(config('services.sms.enabled')) {
+            // SMS sending logic
         }
-
-        return view('orders.track', compact('order'));
     }
 
-    /**
-     * Update order status via admin panel.
-     */
-    public function updateStatus(Request $request, Order $order)
+    private function logStatusChange(Order $order, string $status, ?string $notes)
     {
-        $request->validate(['status' => 'required|string']);
-        $order->update(['status' => $request->status]);
-        return back()->with('success', 'अर्डर स्थिति अपडेट भयो!');
+        $order->statusHistories()->create([
+            'status' => $status,
+            'changed_by' => Auth::id(),
+            'notes' => $notes
+        ]);
     }
 }
