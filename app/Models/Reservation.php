@@ -41,4 +41,18 @@ class Reservation extends Model
     {
         return $this->belongsTo(\App\Models\User::class);
     }
+
+    /**
+     * Get Nepali translation of status.
+     *
+     * @return string
+     */
+    public function getStatusNepaliAttribute(): string
+    {
+        return match($this->status) {
+            'confirmed' => 'पुष्टि भएको',
+            'cancelled' => 'रद्द भएको',
+            default => 'पुष्टि हुन बाँकी',
+        };
+    }
 }

@@ -160,7 +160,7 @@
                         <!-- Address -->
                         <div class="text-center md:text-left">
                             <h3 class="nepali-font text-lg font-bold text-red-600">हाम्रो ठेगाना</h3>
-                            <p class="dark:text-gray-300">काठमाडौँ-३२, टिन्कुने<br>गैरिगाउ, चिञ्चा पिरो भवन</p>
+                            <p class="dark:text-gray-300">काठमाडौँ-३२, तिनकुने<br>गैरिगाउ, चिञ्‍चा पिरो भवन</p>
                         </div>
 
                         <!-- Social Media -->
