@@ -1,9 +1,4 @@
-/* ✅ capitalize-each-word class */
-.capitalize-each-word {
-    text-transform: capitalize;
-}
-
-/* 🚀 फन्ट लोडिङ ऑप्टिमाइजेसन (Preeti Font) */
+/* 🚀 Font Display Optimization for Preeti */
 @font-face {
     font-family: 'Preeti';
     src: local('Preeti'),
@@ -11,44 +6,47 @@
          url('/fonts/preeti.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
-    font-display: swap;
+    font-display: swap; /* Prevent FOIT */
 }
 
-/* ✅ Google Fonts (Nunito) */
+/* ✅ Google Fonts: Nunito (with Bunny CDN optimization) */
 @import url('https://fonts.bunny.net/css?family=nunito ');
 
-/* ✅ बूटस्ट्रप इम्पोर्ट (सही अर्डर) */
+/* 🧱 Bootstrap SCSS Imports (Correct Order) */
 @import 'bootstrap/scss/functions';
-@import 'variables'; /* कस्टम भेरिएबलहरू पहिले */
+@import 'variables'; /* Custom variables override default ones */
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
 @import 'bootstrap/scss/bootstrap';
 
-/* ✅ नेपाली फन्ट फलब्याक */
+/* 🇳🇵 Nepali Font Class with Fallbacks */
 .nepali-font {
-    font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', sans-serif;
+    font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
 }
 
-/* ✅ ट्रान्जिसन सुधार (GPU एक्सेलेरेसन) */
+/* 🧠 Capitalize Each Word Helper */
+.capitalize-each-word {
+    text-transform: capitalize;
+}
+
+/* 🔄 Smooth Transitions with GPU Acceleration */
 #translateBtn {
     transition: transform 0.3s ease, background-color 0.3s ease;
     will-change: transform;
 }
 
-/* ✅ डार्क मोड रंग सुधार */
-.dark {
-    #translateBtn {
-        background: #991b1b;  /* bg-red-900 */
-        color: #fecaca;       /* text-red-200 */
-
-        &:hover {
-            background: #7f1d1d;  /* bg-red-800 */
-        }
-    }
+/* 🌙 Dark Mode Enhancements */
+.dark #translateBtn {
+    background: #991b1b; /* bg-red-900 */
+    color: #fecaca;      /* text-red-200 */
 }
 
-/* 🚀 SVG बेस्ड आइकन (फन्ट निर्भरता हटाउन) */
+.dark #translateBtn:hover {
+    background: #7f1d1d; /* bg-red-800 */
+}
+
+/* 🖼️ SVG Icon Inline (No external font dependency) */
 #translateBtn::after {
-    content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path d="M13.079 2.125a3 3 0 00-2.158 0L3.05 5.05a3 3 0 00-1.856 2.773c0 2.227 1.874 3.054 4.284 3.774A4.853 4.853 0 0112 13.042a4.85 4.85 0 014.284-3.444c2.41-.72 4.284-1.547 4.284-3.774a3 3 0 00-1.856-2.773l-7.87-2.925zM12 16.042a4.85 4.85 0 01-4.284-3.444C5.306 11.987 3.432 11.16 3.432 8.9v-.032l6.698 2.49a3 3 0 002.14.094l6.698-2.49v.032c0 2.227-1.874 3.054-4.284 3.774A4.853 4.853 0 0112 16.042z"/></svg>');
+    content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' class='w-4 h-4'><path d='M13.079 2.125a3 3 0 00-2.158 0L3.05 5.05a3 3 0 00-1.856 2.773c0 2.227 1.874 3.054 4.284 3.774A4.853 4.853 0 0112 13.042a4.85 4.85 0 014.284-3.444c2.41-.72 4.284-1.547 4.284-3.774a3 3 0 00-1.856-2.773l-7.87-2.925zM12 16.042a4.85 4.85 0 01-4.284-3.444C5.306 11.987 3.432 11.16 3.432 8.9v-.032l6.698 2.49a3 3 0 002.14.094l6.698-2.49v.032c0 2.227-1.874 3.054-4.284 3.774A4.853 4.853 0 0112 16.042z'/></svg>");
     margin-left: 8px;
 }

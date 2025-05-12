@@ -11,7 +11,7 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\TranslateController;
-use App\Http\Controllers\DishController; // 📝 DishController थपिएको
+use App\Http\Controllers\DishController;
 
 // =======================
 // Public Routes
@@ -70,8 +70,8 @@ Route::prefix('admin')
         // Admin Menu Management
         Route::resource('menus', MenuController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy', 'show']);
 
-        // Admin Dish Management (नयाँ थपिएको)
-        Route::resource('dishes', DishController::class); // 📝 DishController थपिएको
+        // Admin Dish Management
+        Route::resource('dishes', DishController::class)->middleware('auth', 'verified');
 
         // Admin Settings
         Route::get('/settings', fn() => view('admin.settings'))->name('settings');
@@ -80,25 +80,30 @@ Route::prefix('admin')
 // =======================
 // Authenticated User Routes
 // =======================
-Route::middleware(['auth', 'verified'])
-    ->group(function () {
-        // User Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    // User Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
 
-        // Profile
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-        // User Orders List, Details & Delete
-        Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
+    // User Orders
+    Route::resource('orders', OrderController::class)->only(['index', 'show', 'destroy']);
 
-        // Reservations
-        Route::resource('reservations', ReservationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    // Reservations
+    Route::resource('reservations', ReservationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+});
 
-        // Standalone route for storing orders
-        Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    });
+// =======================
+// Standalone Order Store (Optional)
+// =======================
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Avoid conflict with Resource Controller
+    // This route is only needed if you have a custom store method
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+});
 
 // =======================
 // Translation Routes
