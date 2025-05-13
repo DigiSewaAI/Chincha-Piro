@@ -10,7 +10,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-yellow-300 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 00-2 2z" />
             </svg>
-            हाम्रो सँग सम्पर्क गर्नुहोस्
+            हामी सँग सम्पर्क गर्नुहोस्
         </h1>
         <p class="text-orange-100 mt-1">कुनै प्रश्न, सुझाव वा सहयोगको लागि सन्देश पठाउनुहोस्</p>
     </div>

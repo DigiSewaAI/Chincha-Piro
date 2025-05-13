@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('galleries', function (Blueprint $table) {
             $table->id();
+            $table->string('title');         // फोटोको शीर्षक (जस्तै: "हाम्रा पकवानहरू")
+            $table->string('category');      // श्रेणी (जस्तै: "पकवान", "रेस्टुरेन्ट")
+            $table->string('image_path');    // इमेजको पाथ (जस्तै: "gallery/featured-1.jpg")
+            $table->text('description')->nullable();  // वैकल्पिक विवरण
             $table->timestamps();
         });
     }

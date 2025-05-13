@@ -30,10 +30,17 @@
 <!-- Professional Dishes Section -->
 <section class="py-24 bg-gradient-to-b from-gray-100 to-white">
   <div class="container mx-auto px-4">
-    <h2 class="text-5xl md:text-6xl font-bold text-center mb-20 nepali-font text-red-600
-               border-b-4 border-red-600 pb-4 inline-block">
-      हाम्रो विशेष पकवानहरू
-    </h2>
+    <!-- Section Header (Centered) -->
+    <div class="flex flex-col items-center mb-20">
+      <!-- Add the cartoon image here -->
+      <img src="{{ asset('images/cartoon-chef.png') }}" alt="Chincha Chef" class="w-48 md:w-64 mb-6">
+
+      <!-- Section Title -->
+      <h2 class="text-5xl md:text-6xl font-bold mb-20 nepali-font text-red-600
+                 border-b-4 border-red-600 pb-4 block mx-auto text-center w-fit">
+        हाम्रो विशेष पकवानहरू
+      </h2>
+    </div>
 
     <!-- Dishes Grid -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
