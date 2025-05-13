@@ -13,7 +13,6 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        // Fetch reservations for the authenticated user
         $reservations = Reservation::where('user_id', Auth::id())
                                    ->latest()
                                    ->get();
@@ -29,7 +28,7 @@ class ReservationController extends Controller
         // Validate the request
         $validated = $request->validate([
             'reservation_time' => 'required|date|after:now',
-            'guests' => 'required|integer|min:1|max:20',
+            'guests' => 'required|integer|min:1|max:100',
             'contact_number' => [
                 'required',
                 'string',
@@ -42,14 +41,15 @@ class ReservationController extends Controller
         Reservation::create([
             'user_id' => Auth::id(),
             'reservation_time' => $validated['reservation_time'],
-            'guests' => $validated['guestes'] ?? 2,
+            'guests' => $validated['guests'], // ✅ Corrected typo: 'guestes' -> 'guests'
             'contact_number' => $validated['contact_number'],
             'special_request' => $validated['special_request'] ?? null,
             'status' => 'pending'
         ]);
 
-        // Redirect back with success message
-        return redirect()->back()->with('success', 'रिजर्भेसन सफल भयो!');
+        // ✅ Redirect to index route to prevent duplicate submissions
+        return redirect()->route('reservations.index')
+                         ->with('success', 'रिजर्भेसन सफल भयो!');
     }
 
     /**
@@ -57,7 +57,6 @@ class ReservationController extends Controller
      */
     public function show(Reservation $reservation)
     {
-        // Authorize that the user owns this reservation
         if ($reservation->user_id !== Auth::id()) {
             abort(403, 'तपाईंको अनुमति छैन');
         }
@@ -70,7 +69,6 @@ class ReservationController extends Controller
      */
     public function edit(Reservation $reservation)
     {
-        // Authorization check
         if ($reservation->user_id !== Auth::id()) {
             abort(403, 'तपाईंको अनुमति छैन');
         }
@@ -97,8 +95,7 @@ class ReservationController extends Controller
                 'string',
                 'regex:/^(98|97|96)\d{8}$/'
             ],
-            'special_request' => 'nullable|string|max:500',
-            'status' => 'in:pending,confirmed,cancelled'
+            'special_request' => 'nullable|string|max:500'
         ]);
 
         // Update reservation
@@ -109,7 +106,7 @@ class ReservationController extends Controller
     }
 
     /**
-     * Remove the specified reservation from storage.
+     * Cancel the specified reservation.
      */
     public function destroy(Reservation $reservation)
     {
@@ -118,10 +115,10 @@ class ReservationController extends Controller
             abort(403, 'तपाईंको अनुमति छैन');
         }
 
-        // Cancel or delete
-        $reservation->delete();
+        // Cancel reservation instead of deleting it
+        $reservation->update(['status' => 'cancelled']);
 
         return redirect()->route('reservations.index')
-                         ->with('success', 'रिजर्भेसन मेटाइयो!');
+                         ->with('success', 'रिजर्भेसन रद्द भयो!');
     }
 }
