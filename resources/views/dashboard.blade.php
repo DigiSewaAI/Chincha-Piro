@@ -9,7 +9,7 @@
                 <p class="nepali-font text-gray-500 dark:text-gray-400 mt-1">चिन्चा पिरोको प्रदर्शन विश्लेषण</p>
             </div>
             <div class="flex items-center gap-3">
-                <!-- नयाँ अर्डर फारममा @csrf र आवश्यक फिल्डहरू थपिएको छ -->
+                <!-- ✅ फारमको रूट नाम सही छ -->
                 <form action="{{ route('orders.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="dish_id" value="1"> <!-- उदाहरणलाई लागि -->
@@ -26,7 +26,6 @@
                 </form>
             </div>
         </div>
-
         <!-- स्ट्याट्स कार्ड -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- आजको अर्डर कार्ड -->
@@ -52,7 +51,6 @@
                     </a>
                 </div>
             </div>
-
             <!-- आजको राजस्व कार्ड -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
                 <div class="flex justify-between items-center">
@@ -76,7 +74,6 @@
                     </a>
                 </div>
             </div>
-
             <!-- सक्रिय मेनु कार्ड -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1">
                 <div class="flex justify-between items-center">
@@ -101,7 +98,6 @@
                 </div>
             </div>
         </div>
-
         <!-- चार्ट र स्थिति सेक्सन -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- राजस्व चार्ट -->
@@ -115,7 +111,6 @@
                 </div>
                 <canvas id="revenueChart" class="w-full h-64"></canvas>
             </div>
-
             <!-- अर्डर स्थिति -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <h3 class="nepali-font text-xl font-semibold text-gray-800 dark:text-gray-200 mb-6">अर्डर स्थिति</h3>
@@ -152,7 +147,6 @@
                 </div>
             </div>
         </div>
-
         <!-- हालैका अर्डरहरू -->
         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -227,7 +221,6 @@
                 </a>
             </div>
         </div>
-
         <!-- सूचना र कार्य सेक्सन -->
         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
@@ -302,9 +295,9 @@
 
 @push('scripts')
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js  "></script>
 <!-- Toastify -->
-<script src="https://cdn.jsdelivr.net/npm/toastify-js "></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js  "></script>
 <!-- Livewire -->
 @livewireScripts
 <!-- Order Modal Script -->
@@ -312,16 +305,13 @@
     function openOrderModal() {
         document.getElementById('orderModal').classList.remove('hidden');
     }
-
     function closeOrderModal() {
         document.getElementById('orderModal').classList.add('hidden');
     }
-
     // ESC Key मार्फत मोडल बन्द गर्नुहोस्
     document.addEventListener('keydown', function(e) {
         if (e.key === "Escape") closeOrderModal();
     });
-
     // Toast Notification
     @if(session('success'))
         Toastify({

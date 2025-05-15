@@ -7,16 +7,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>चिञ्‍चा पिरो - @yield('title')</title>
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com "></script>
-
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs @3.x.x/dist/cdn.min.js"></script>
-
     <!-- Heroicons CDN -->
     <script src="https://unpkg.com/ @heroicons/v2/24/outline/index.js"></script>
-
     <!-- Nepali Font Support -->
     <style>
         /* 📦 Preeti Font (Unicode Optimized) */
@@ -29,17 +25,14 @@
             font-style: normal;
             font-display: swap;
         }
-
         /* 🧠 Nepali Font Class */
         .nepali-font {
             font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
         }
-
         /* 🔄 Sidebar Transition */
         .sidebar-transition {
             transition: all 0.3s ease;
         }
-
         /* 🧠 Hide Alpine.js Elements Until Ready */
         [x-cloak] {
             display: none !important;
@@ -62,7 +55,6 @@
                     </svg>
                 </button>
             </div>
-
             <!-- Navigation -->
             <nav class="mt-4">
                 <a href="{{ route('home') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors">
@@ -71,12 +63,13 @@
                     </svg>
                     <span x-show="sidebarOpen" class="flex-1 nepali-font">मुख्य पृष्ठ</span>
                 </a>
-
                 @foreach ([
                     ['route' => 'dashboard', 'label' => 'ड्यासबोर्ड', 'icon' => 'chart-bar'],
                     ['route' => 'menu.index', 'label' => 'मेनु व्यवस्थापन', 'icon' => 'book-open'],
                     ['route' => 'gallery', 'label' => 'फोटो ग्यालरी', 'icon' => 'photo'],
                     ['route' => 'contact', 'label' => 'सम्पर्क जानकारी', 'icon' => 'phone'],
+                    // ✅ रूट नाम सच्याइएको
+                    ['route' => 'reservations.index', 'label' => 'रिजर्भेसन', 'icon' => 'calendar']
                 ] as $item)
                 <a href="{{ route($item['route']) }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,6 +86,9 @@
                             @case('phone')
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                 @break
+                            @case('calendar') <!-- ✅ नयाँ क्यालेन्डर आइकन थपिएको -->
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                @break
                         @endswitch
                     </svg>
                     <span x-show="sidebarOpen" class="flex-1 nepali-font">{{ $item['label'] }}</span>
@@ -100,7 +96,6 @@
                 @endforeach
             </nav>
         </aside>
-
         <!-- 🖥️ Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- 🔝 Header -->
@@ -113,7 +108,6 @@
                     </a>
                     <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-200 nepali-font">@yield('title')</h1>
                 </div>
-
                 <!-- 🌙 Dark Mode Toggle + Social Icons -->
                 <div class="flex items-center space-x-6">
                     <div class="flex space-x-4">
@@ -143,7 +137,6 @@
                     </button>
                 </div>
             </header>
-
             <!-- 📄 Main Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
                 <div class="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-6 nepali-font">
@@ -151,9 +144,7 @@
                     <span>/</span>
                     <span class="text-gray-600 dark:text-gray-300">@yield('title')</span>
                 </div>
-
                 @yield('content')
-
                 <!-- 📄 Footer -->
                 <footer class="mt-8 pt-6 border-t dark:border-gray-700">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -162,7 +153,6 @@
                             <h3 class="nepali-font text-lg font-bold text-red-600">हाम्रो ठेगाना</h3>
                             <p class="dark:text-gray-300">काठमाडौँ-३२, तिनकुने<br>गैरिगाउ, चिञ्‍चा पिरो भवन</p>
                         </div>
-
                         <!-- Social Media -->
                         <div class="flex flex-col items-center">
                             <h3 class="nepali-font text-lg font-bold text-red-600 mb-2">सामाजिक सञ्जाल</h3>
@@ -184,7 +174,6 @@
                                 </a>
                             </div>
                         </div>
-
                         <!-- Contact -->
                         <div class="text-center md:text-right">
                             <h3 class="nepali-font text-lg font-bold text-red-600">सम्पर्क</h3>
@@ -198,18 +187,15 @@
             </main>
         </div>
     </div>
-
     <!-- 📞 WhatsApp Button -->
     <a href="https://wa.me/9779846216711 " target="_blank"
        class="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 1.67c2.33 0 4.52.91 6.17 2.56a8.677 8.677 0 012.55 6.17c0 4.84-3.94 8.78-8.78 8.78-1.48 0-2.93-.37-4.19-1.07l-.3-.15-3.12.82.83-3.04-.18-.28c-.76-1.15-1.17-2.49-1.17-3.88 0-4.84 3.94-8.78 8.78-8.78"/>
+            <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 1.67c2.33 0 4.52.91 6.17 2.56a8.677 8.677 0 012.55 6.17c0 4.84-3.94-8.78-8.78-8.78-1.48 0-2.93-.37-4.19-1.07l-.3-.15-3.12.82.83-3.04-.18-.28c-.76-1.15-1.17-2.49-1.17-3.88 0-4.84 3.94-8.78 8.78-8.78"/>
         </svg>
     </a>
-
     <!-- 📊 Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
-
     @livewireScripts
 </body>
 </html>

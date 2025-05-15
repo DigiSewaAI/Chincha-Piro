@@ -16,6 +16,7 @@
         "laravel/ui": "^4.6",
         "livewire/livewire": "^3.6",
         "nikic/php-parser": "^4.19 || ^5.0",
+        "spatie/laravel-permission": "^6.18",
         "tijsverkoyen/css-to-inline-styles": "2.2.5"
     },
     "require-dev": {
@@ -27,7 +28,6 @@
         "psy/psysh": "^0.12.8",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-ignition": "^2.0",
-        "spatie/laravel-permission": "^6.17",
         "backpack/generators": "^4.0",
         "laravel/breeze": "^1.29",
         "laravel/pint": "1.13.0",

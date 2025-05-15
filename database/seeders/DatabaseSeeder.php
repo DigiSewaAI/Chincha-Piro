@@ -7,23 +7,26 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * डेटाबेसको लागि डमी डाटा सिड गर्नुहोस्
      */
     public function run(): void
     {
-        // 1. First: Seed Users (Orders require user_id)
+        // १. पहिलो चरण: प्रयोगकर्ता सिड गर्ने (अर्डरहरूले user_id आवश्यक पर्छ)
         $this->call(UserSeeder::class);
 
-        // 2. Second: Seed Categories (Dishes require category_id)
+        // २. दोस्रो चरण: श्रेणीहरू सिड गर्ने (खानाका आइटमहरूले category_id आवश्यक पर्छ)
         $this->call(CategorySeeder::class);
 
-        // 3. Third: Seed Dishes (Use DishSeeder instead of MenusTableSeeder)
+        // ३. तेस्रो चरण: खानाका आइटमहरू सिड गर्ने
         $this->call(DishSeeder::class);
 
-        // 4. Fourth: Seed Orders (requires valid user_id and dish_id)
+        // ४. चौथो चरण: अर्डरहरू सिड गर्ने (user_id र dish_id वैध हुनु पर्छ)
         $this->call(OrderSeeder::class);
 
-        // Optional Seeders (uncomment as needed)
+        // ५. पाँचौं चरण: भूमिका र अनुमतिहरू सेटअप गर्ने
+        $this->call(RolesPermissionsSeeder::class);
+
+        // वैकल्पिक सिडरहरू (आवश्यक अनुसार अनकमेन्ट गर्नुहोस्)
         // $this->call(ReservationSeeder::class);
         // $this->call(TableSeeder::class);
     }

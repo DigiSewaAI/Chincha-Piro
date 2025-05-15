@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use App\Models\User;
 use App\Models\Dish;
@@ -22,9 +24,6 @@ class Order extends Model
      */
     protected $fillable = [
         'user_id',              // Related user
-        'dish_id',              // Dish ID
-        'quantity',             // Quantity
-        'total_price',          // Total price
         'customer_name',        // Customer name
         'phone',                // Phone number
         'address',              // Address
@@ -43,19 +42,21 @@ class Order extends Model
     ];
 
     /**
-     * Relationship to the Dish model.
-     */
-    public function dish(): BelongsTo
-    {
-        return $this->belongsTo(Dish::class);
-    }
-
-    /**
      * Relationship to the User model.
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Many-to-many relationship to the Dish model through order_items pivot table.
+     */
+    public function dishes(): BelongsToMany
+    {
+        return $this->belongsToMany(Dish::class, 'order_items')
+            ->withPivot('quantity', 'price', 'special_instructions')
+            ->withTimestamps();
     }
 
     /**
@@ -79,5 +80,23 @@ class Order extends Model
             'cancelled' => 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
             default => 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
         };
+    }
+
+    /**
+     * Calculate total order price including all items
+     */
+    public function getTotalPriceAttribute(): float
+    {
+        return $this->dishes->sum(function($dish) {
+            return $dish->pivot->quantity * $dish->pivot->price;
+        });
+    }
+
+    /**
+     * Get all items for this order
+     */
+    public function items()
+    {
+        return $this->hasMany(\App\Models\OrderItem::class);
     }
 }

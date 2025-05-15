@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container mx-auto p-4 nepali-font">
-
     <!-- ✅ सफलता सन्देश -->
     @if(session('success'))
     <div id="successMessage" class="bg-green-100 text-green-800 border border-green-400 px-4 py-3 rounded mb-4 transition-opacity duration-1000"
@@ -39,9 +38,9 @@
                     value="{{ old('reservation_time') }}" required>
             </div>
 
-            <!-- मानिस संख्या -->
+            <!-- व्यक्ति संख्या -->
             <div class="mb-4">
-                <label class="block text-gray-700 dark:text-gray-300 mb-2">मानिस संख्या (1-100):</label>
+                <label class="block text-gray-700 dark:text-gray-300 mb-2">व्यक्ति संख्या (1-100):</label>
                 <input type="number" name="guests" min="1" max="100"
                     class="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded"
                     value="{{ old('guests') }}" required>
@@ -77,21 +76,15 @@
             const form = document.getElementById('reservationForm');
             const successBox = document.getElementById('successMessage');
 
-            if (form) {
-                // फारम पूर्ण खाली गर्नुहोस्
-                form.reset();
-            }
+            if (form) form.reset();
 
             if (successBox) {
                 setTimeout(() => {
-                    successBox.classList.add('opacity-0'); // fade out
-                    setTimeout(() => {
-                        successBox.remove(); // DOM बाट हटाउने
-                    }, 1000);
-                }, 5000); // 5 sec पछि fade सुरु
+                    successBox.classList.add('opacity-0');
+                    setTimeout(() => successBox.remove(), 1000);
+                }, 5000);
             }
 
-            // URL मा history cleanup
             if (window.history.replaceState) {
                 window.history.replaceState(null, null, window.location.href);
             }
@@ -100,7 +93,7 @@
     @endif
 
     <!-- 📋 रिजर्भेसन सूची -->
-    @if($reservations->isNotEmpty())
+    @if(isset($reservations) && $reservations->isNotEmpty())
     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
         <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">तपाईंका रिजर्भेसनहरू</h2>
 
@@ -109,8 +102,9 @@
                 <thead>
                     <tr class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                         <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600">मिति</th>
-                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600">मानिस</th>
+                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600">व्यक्ति</th>
                         <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600">अवस्था</th>
+                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600">कार्य</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -129,24 +123,32 @@
                         <!-- अवस्था -->
                         <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-600">
                             @switch($reservation->status)
-                            @case('confirmed')
-                            <span
-                                class="px-2 py-1 rounded bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-100">
-                                पुष्टि भएको
-                            </span>
-                            @break
-                            @case('cancelled')
-                            <span
-                                class="px-2 py-1 rounded bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-100">
-                                रद्द भएको
-                            </span>
-                            @break
-                            @default
-                            <span
-                                class="px-2 py-1 rounded bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100">
-                                पुष्टि हुन बाँकी
-                            </span>
+                                @case('confirmed')
+                                    <span class="px-2 py-1 rounded bg-green-200 text-green-800 dark:bg-green-700 dark:text-green-100">
+                                        पुष्टि भएको
+                                    </span>
+                                    @break
+                                @case('cancelled')
+                                    <span class="px-2 py-1 rounded bg-red-200 text-red-800 dark:bg-red-700 dark:text-red-100">
+                                        रद्द भएको
+                                    </span>
+                                    @break
+                                @default
+                                    <span class="px-2 py-1 rounded bg-yellow-200 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100">
+                                        पुष्टि हुन बाँकी
+                                    </span>
                             @endswitch
+                        </td>
+
+                        <!-- कार्य -->
+                        <td class="py-2 px-4 border-b border-gray-200 dark:border-gray-600 text-center">
+                            <a href="{{ route('reservations.edit', $reservation->id) }}"
+                                class="text-blue-600 hover:underline mr-2">सम्पादन</a>
+                            <form action="{{ route('reservations.destroy', $reservation->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline" onclick="return confirm('के तपाई यो रिजर्भेसन मेटाउन चाहानुहुन्छ?')">मेटाउनुहोस्</button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach
@@ -159,6 +161,5 @@
         <p class="text-gray-700 dark:text-gray-300">अहिलेसम्म कुनै रिजर्भेसन भएको छैन।</p>
     </div>
     @endif
-
 </div>
 @endsection

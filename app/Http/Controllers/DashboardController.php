@@ -42,36 +42,36 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Active Users (5 ओटा मात्र)
-        $activeUsers = User::where('is_active', true)->latest()->take(5)->get();
-
-        // Total Active Users
-        $totalActiveUsers = User::where('is_active', true)->count();
-
-        // Recent Orders with User (केवल Userको id र name)
-        $recentOrders = Order::with(['user' => function ($query) {
-            $query->select('id', 'name', 'email');
-        }])->latest()->limit(5)->get();
-
-        // Chart Data
-        $chartLabels = ['बैशाख', 'जेठ', 'असार', 'साउन', 'भदौ', 'असोज'];
-        $chartData = [65000, 59000, 80000, 81000, 56000, 75000];
+        // Today's Statistics
+        $todayReservations = Reservation::whereDate('created_at', today())->count();
+        $todayOrders = Order::whereDate('created_at', today())->where('user_id', $user->id)->count();
 
         // Dashboard Statistics
-        $todayReservations = Reservation::whereDate('created_at', today())->count();
-        $todayOrders = Order::whereDate('created_at', today())->count();
         $menuCount = Menu::count();
+
+        // Recent Orders for Authenticated User
+        $recentOrders = Order::where('user_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Order Statistics (Pending, Completed)
+        $orderStats = [
+            'pending' => Order::where('user_id', $user->id)
+                ->whereStatus('pending')
+                ->count(),
+            'completed' => Order::where('user_id', $user->id)
+                ->whereStatus('completed')
+                ->count(),
+        ];
 
         return view('dashboard', compact(
             'user',
-            'activeUsers',
-            'totalActiveUsers',
-            'recentOrders',
-            'chartLabels',
-            'chartData',
             'todayReservations',
             'todayOrders',
-            'menuCount'
+            'menuCount',
+            'recentOrders',
+            'orderStats'
         ));
     }
 }

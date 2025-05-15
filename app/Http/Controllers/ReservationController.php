@@ -15,9 +15,17 @@ class ReservationController extends Controller
     {
         $reservations = Reservation::where('user_id', Auth::id())
                                    ->latest()
-                                   ->get();
+                                   ->paginate(10); // ✅ Pagination Added
 
         return view('reservations.index', compact('reservations'));
+    }
+
+    /**
+     * Show the reservation form.
+     */
+    public function create()
+    {
+        return view('reservations.create');
     }
 
     /**
@@ -32,36 +40,25 @@ class ReservationController extends Controller
             'contact_number' => [
                 'required',
                 'string',
-                'regex:/^(98|97|96)\d{8}$/'
+                'regex:/^(98|97|96)\d{8}$/' // ✅ Nepali Mobile Format
             ],
             'special_request' => 'nullable|string|max:500'
+        ], [
+            'contact_number.regex' => 'सम्पर्क नम्बर 98XXXXXXXX, 97XXXXXXXX वा 96XXXXXXXX प्रारूपमा हुनुपर्छ।'
         ]);
 
         // Create the reservation
         Reservation::create([
             'user_id' => Auth::id(),
             'reservation_time' => $validated['reservation_time'],
-            'guests' => $validated['guests'], // ✅ Corrected typo: 'guestes' -> 'guests'
+            'guests' => $validated['guests'],
             'contact_number' => $validated['contact_number'],
             'special_request' => $validated['special_request'] ?? null,
             'status' => 'pending'
         ]);
 
-        // ✅ Redirect to index route to prevent duplicate submissions
         return redirect()->route('reservations.index')
                          ->with('success', 'रिजर्भेसन सफल भयो!');
-    }
-
-    /**
-     * Display the specified reservation.
-     */
-    public function show(Reservation $reservation)
-    {
-        if ($reservation->user_id !== Auth::id()) {
-            abort(403, 'तपाईंको अनुमति छैन');
-        }
-
-        return view('reservations.show', compact('reservation'));
     }
 
     /**
@@ -69,6 +66,7 @@ class ReservationController extends Controller
      */
     public function edit(Reservation $reservation)
     {
+        // Authorization Check
         if ($reservation->user_id !== Auth::id()) {
             abort(403, 'तपाईंको अनुमति छैन');
         }
@@ -89,7 +87,7 @@ class ReservationController extends Controller
         // Validate input
         $validated = $request->validate([
             'reservation_time' => 'required|date|after:now',
-            'guests' => 'required|integer|min:1|max:20',
+            'guests' => 'required|integer|min:1|max:100',
             'contact_number' => [
                 'required',
                 'string',
