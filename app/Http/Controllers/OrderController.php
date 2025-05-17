@@ -12,198 +12,128 @@ use App\Notifications\OrderPlacedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use App\Rules\ValidOrderItems;
 
 class OrderController extends Controller
 {
-    /**
-     * Display the order form to the user.
-     */
     public function index()
     {
-        $categories = Category::all();
-        $dishes = Dish::where('is_available', true)
-                      ->with('category')
-                      ->orderBy('spice_level', 'desc')
-                      ->get();
+        $categories = Category::with(['dishes' => function ($query) {
+            $query->where('is_available', true)->orderBy('name_nepali');
+        }])->get();
+
+        $dishes = Dish::where('is_available', true)->get();
 
         $orders = Auth::user()->orders()
-                       ->with(['items.dish', 'statusHistories'])
-                       ->latest()
-                       ->paginate(10);
+            ->with(['items.dish', 'statusHistories'])
+            ->latest()
+            ->paginate(10);
 
-        return view('orders.index', compact('dishes', 'orders', 'categories'));
+        return view('orders.index', compact('categories', 'orders', 'dishes'));
     }
 
-    /**
-     * Admin: List all orders with filters and enhanced search.
-     */
-    public function listOrders()
+    public function publicIndex()
     {
-        $this->authorize('viewAny', Order::class);
-        $filters = request(['status', 'search', 'date_range']);
+        $orders = Order::publicOrders()
+            ->with(['items.dish'])
+            ->latest()
+            ->paginate(10);
 
-        $orders = Order::with(['user', 'items.dish'])
-                    ->when($filters['status'], fn($q) => $q->where('status', $filters['status']))
-                    ->when($filters['search'], function ($q) use ($filters) {
-                        return $q->whereHas('user', fn($query) =>
-                            $query->where('name', 'like', "%{$filters['search']}%")
-                                  ->orWhere('email', 'like', "%{$filters['search']}%")
-                        )->orWhere('id', $filters['search']);
-                    })
-                    ->latest()
-                    ->paginate(10)
-                    ->appends($filters);
-
-        return view('admin.orders.index', compact('orders'));
+        return view('orders.public-index', compact('orders'));
     }
 
-    /**
-     * Store a new order with validation and event dispatching.
-     */
+    public function create()
+    {
+        $categories = Category::withAvailableDishes();
+        return view('orders.create', compact('categories'));
+    }
+
     public function store(Request $request)
     {
         $validated = $this->validateOrderRequest($request);
 
         try {
             $order = DB::transaction(function () use ($validated) {
-                $dishIds = collect($validated['items'])->pluck('dish_id')->toArray();
-
-                $availableDishes = Dish::whereIn('id', $dishIds)
-                                       ->where('is_available', true)
-                                       ->get()
-                                       ->keyBy('id');
-
-                if (count($availableDishes) !== count($validated['items'])) {
-                    throw new \Exception('केही व्यंजनहरू अहिले उपलब्ध छैनन्');
-                }
-
-                $total = $this->calculateTotal($validated['items'], $availableDishes);
-
-                $order = Auth::user()->orders()->create([
-                    'total_price' => $total,
-                    'customer_name' => $validated['customer_name'] ?? Auth::user()->name,
-                    'phone' => $validated['phone'],
-                    'address' => $validated['address'],
-                    'special_instructions' => $validated['special_instructions'] ?? null,
-                    'preferred_delivery_time' => $validated['preferred_delivery_time'] ?? null,
-                    'payment_method' => $validated['payment_method'] ?? 'cash',
-                    'status' => 'pending'
-                ]);
-
-                foreach ($validated['items'] as $item) {
-                    $dish = $availableDishes[$item['dish_id']];
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'dish_id' => $dish->id,
-                        'quantity' => $item['quantity'],
-                        'price' => $dish->price,
-                        'total' => $dish->price * $item['quantity'],
-                        'note' => $item['note'] ?? null
-                    ]);
-                }
-
-                $this->logStatusChange($order, 'pending', 'Order placed by customer');
-
-                event(new NewOrderEvent($order));
-                Auth::user()->notify(new OrderPlacedNotification($order));
-
-                return $order;
+                return $this->createOrder($validated);
             });
 
-            return redirect()->route('orders.track', $order)
-                ->with('success', 'अर्डर सफल भयो! ट्र्याकिङ्ग आईडी: ' . $order->id);
+            // ✅ Add this line to flash the order ID to session
+            session()->flash('order_id', $order->id);
+
+            return redirect()->route('orders.success')
+                ->with('success', 'अर्डर सफल भयो! ट्र्याकिङ्ग ID: ' . $order->id);
+
         } catch (\Exception $e) {
-            return back()->withInput()->withErrors(['error' => 'अर्डर गर्न असफल: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'अर्डर असफल: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Display the tracking page for an order.
-     */
+    public function success()
+    {
+        return view('orders.success');
+    }
+
     public function track(Order $order)
     {
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'तपाईंलाई यो अर्डर हेर्न अनुमति छैन');
-        }
+        $this->authorize('view', $order);
 
         $statusHistory = $order->statusHistories()
             ->with('changer')
-            ->orderBy('created_at', 'desc')
+            ->orderedChronologically()
             ->get();
 
-        $items = $order->items()
-            ->with('dish')
-            ->get();
-
-        return view('orders.track', compact('order', 'statusHistory', 'items'));
+        return view('orders.track', [
+            'order' => $order->load('items.dish'),
+            'statusHistory' => $statusHistory
+        ]);
     }
 
-    /**
-     * Update the status of an order.
-     */
     public function updateStatus(Request $request, Order $order)
     {
         $this->authorize('update', $order);
 
-        $validated = $request->validate([
-            'status' => [
-                'required',
-                Rule::in(['pending', 'confirmed', 'preparing', 'on_delivery', 'completed', 'cancelled']),
-                function ($attribute, $value, $fail) use ($order) {
-                    if (!$this->isValidStatusTransition($order->status, $value)) {
-                        $fail("अवस्था परिवर्तन '{$order->status}' बाट '{$value}' मा गर्न मिल्दैन");
-                    }
-                }
-            ],
-            'notes' => 'nullable|string|max:500'
-        ]);
+        $validated = $this->validateStatusUpdate($request, $order);
 
         DB::transaction(function () use ($order, $validated) {
-            $order->update(['status' => $validated['status']]);
-            $this->logStatusChange($order, $validated['status'], $validated['notes'] ?? null);
+            $order->updateStatus($validated['status'], $validated['notes'] ?? null);
         });
 
-        return back()->with('success', 'अवस्था अपडेट भयो: ' . $order->status);
+        return back()->with('success', 'स्थिति अद्यावधिक भयो: ' . $order->status);
     }
 
-    /**
-     * Delete an order.
-     */
     public function destroy(Order $order)
     {
         $this->authorize('delete', $order);
 
-        if ($order->status === 'completed') {
-            return back()->withErrors(['error' => 'पूरा भएको अर्डर हटाउन सकिँदैन']);
-        }
+        $this->validateDeletion($order);
 
         DB::transaction(function () use ($order) {
-            $order->items()->delete();
-            $order->delete();
+            $order->safeDelete();
         });
 
         return redirect()->route('admin.orders.index')
-                         ->with('info', 'अर्डर सफलतापूर्वक हटाइयो');
+                         ->with('info', 'अर्डर सफलतापूर्वक मेटियो');
     }
 
-    /**
-     * Show form to create an order.
-     */
-    public function create()
+    /**********************************
+     * निजी सहयोगी विधिहरू
+     **********************************/
+
+    private function processFilters(): array
     {
-        $dishes = Dish::where('is_available', true)->get();
-        return view('orders.create', compact('dishes'));
+        return request()->validate([
+            'status' => 'nullable|string',
+            'search' => 'nullable|string|max:255',
+            'date_range' => 'nullable|string'
+        ]);
     }
 
-    /**********************
-     * Private Helper Methods
-     **********************/
     private function validateOrderRequest(Request $request): array
     {
-        $rules = [
-            'items' => 'required|array|min:1',
+        return Validator::make($request->all(), [
+            'items' => ['required', 'array', 'min:1', new ValidOrderItems],
             'items.*.dish_id' => 'required|exists:dishes,id',
             'items.*.quantity' => 'required|integer|between:1,10',
             'items.*.note' => 'nullable|string|max:255',
@@ -212,50 +142,95 @@ class OrderController extends Controller
                 'string',
                 'max:100'
             ],
-            'phone' => ['required', 'regex:/^(98|97|96)[0-9]{8}$/', 'max:10'],
+            'phone' => ['required', 'regex:/^(98|97|96)\d{8}$/'],
             'address' => 'required|string|max:500',
             'special_instructions' => 'nullable|string|max:1000',
-            'preferred_delivery_time' => 'nullable|date|after:now',
-            'payment_method' => ['nullable', Rule::in(['cash', 'esewa', 'khalti', 'card'])]
-        ];
-
-        $messages = [
-            'phone.regex' => 'फोन नम्बर ९८, ९७ वा ९६ बाट सुरु गरेर १० अंकको हुनुपर्छ।',
-            'items.*.quantity.between' => 'प्रत्येक वस्तुको मात्रा 1 देखि 10 को बीचमा हुनुपर्छ।'
-        ];
-
-        return Validator::make($request->all(), $rules, $messages)->validate();
+            'preferred_delivery_time' => 'nullable|date|after:+1 hour',
+            'payment_method' => ['required', Rule::in(['cash', 'esewa', 'khalti'])]
+        ], [
+            'phone.regex' => 'वैध नेपाली मोबाइल नम्बर प्रविष्ट गर्नुहोस्',
+            'items.*.quantity.between' => 'प्रत्येक वस्तुको मात्रा १-१० को बीचमा हुनुपर्छ',
+            'items.required' => 'कम्तिमा एक वस्तु चयन गर्नुहोस्'
+        ])->validate();
     }
 
-    private function calculateTotal(array $items, $availableDishes): float
+    private function createOrder(array $validated): Order
+    {
+        $user = Auth::user();
+        $dishes = Dish::whereIn('id', collect($validated['items'])->pluck('dish_id'))
+            ->available()
+            ->get()
+            ->keyBy('id');
+
+        if ($dishes->count() !== count($validated['items'])) {
+            throw new \Exception('केही वस्तुहरू उपलब्ध छैनन्');
+        }
+
+        $order = $user->orders()->create([
+            'total_price' => $this->calculateTotal($validated['items'], $dishes),
+            'customer_name' => $validated['customer_name'] ?? $user->name,
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'special_instructions' => $validated['special_instructions'],
+            'preferred_delivery_time' => $validated['preferred_delivery_time'],
+            'payment_method' => $validated['payment_method'],
+            'status' => 'pending'
+        ]);
+
+        $this->createOrderItems($order, $validated['items'], $dishes);
+        $this->notifyOrderCreation($order);
+
+        return $order;
+    }
+
+    private function calculateTotal(array $items, $dishes): float
     {
         return collect($items)->sum(fn($item) =>
-            $availableDishes[$item['dish_id']]->price * $item['quantity']
+            $dishes[$item['dish_id']]->price * $item['quantity']
         );
     }
 
-    private function isValidStatusTransition(string $current, string $new): bool
+    private function createOrderItems(Order $order, array $items, $dishes): void
     {
-        $validTransitions = [
-            'pending' => ['confirmed', 'cancelled'],
-            'confirmed' => ['preparing', 'cancelled'],
-            'preparing' => ['on_delivery'],
-            'on_delivery' => ['completed'],
-            'completed' => [],
-            'cancelled' => []
-        ];
-        return in_array($new, $validTransitions[$current] ?? []);
+        foreach ($items as $item) {
+            $dish = $dishes[$item['dish_id']];
+            $order->items()->create([
+                'dish_id' => $dish->id,
+                'quantity' => $item['quantity'],
+                'price' => $dish->price,
+                'total' => $dish->price * $item['quantity'],
+                'note' => $item['note']
+            ]);
+        }
     }
 
-    private function logStatusChange(Order $order, string $status, ?string $notes)
+    private function notifyOrderCreation(Order $order): void
     {
-        StatusHistory::create([
-            'order_id' => $order->id,
-            'status' => $status,
-            'changed_by' => Auth::id(),
-            'notes' => $notes,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent()
+        event(new NewOrderEvent($order));
+        $order->user->notify(new OrderPlacedNotification($order));
+        StatusHistory::createInitialHistory($order);
+    }
+
+    private function validateStatusUpdate(Request $request, Order $order): array
+    {
+        return $request->validate([
+            'status' => [
+                'required',
+                Rule::in(Order::STATUSES),
+                function ($attr, $value, $fail) use ($order) {
+                    if (!Order::isValidTransition($order->status, $value)) {
+                        $fail("अमान्य स्थिति परिवर्तन: {$order->status} → {$value}");
+                    }
+                }
+            ],
+            'notes' => 'nullable|string|max:500'
         ]);
+    }
+
+    private function validateDeletion(Order $order): void
+    {
+        if ($order->isCompleted()) {
+            throw new \Exception('पूरा भएको अर्डर मेटाउन असमर्थ');
+        }
     }
 }

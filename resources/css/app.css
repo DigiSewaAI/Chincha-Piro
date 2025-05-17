@@ -1,52 +1,160 @@
-/* 🚀 Font Display Optimization for Preeti */
+/* Tailwind CSS Imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 📦 Nunito Font Definitions (from fonts.bunny.net) */
+@font-face {
+    font-family: 'Nunito';
+    font-style: normal;
+    font-weight: 400;
+    font-stretch: 100%;
+    src: url('https://fonts.bunny.net/nunito/files/nunito-latin-400-normal.woff2 ') format('woff2'),
+         url('https://fonts.bunny.net/nunito/files/nunito-latin-400-normal.woff ') format('woff');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* 🧭 Global Typography */
+@layer base {
+    html {
+        font-family: 'Nunito', sans-serif;
+        @apply text-[16px] md:text-[18px];
+    }
+
+    body {
+        font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        @apply bg-slate-50 text-slate-800 dark:bg-gray-900 dark:text-gray-100;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-bold tracking-tight;
+    }
+}
+
+/* 📖 Preeti Font Declaration */
 @font-face {
     font-family: 'Preeti';
-    src: local('Preeti'),
-         url('/fonts/preeti.woff2') format('woff2'),
+    src: url('/fonts/preeti.woff2') format('woff2'),
          url('/fonts/preeti.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
-    font-display: swap; /* Prevent FOIT */
+    font-display: swap;
+    unicode-range: U+0900-097F; /* Devanagari (Nepali) */
 }
 
-/* ✅ Google Fonts: Nunito (with Bunny CDN optimization) */
-@import url('https://fonts.bunny.net/css?family=nunito ');
-
-/* 🧱 Bootstrap SCSS Imports (Correct Order) */
+/* 🧱 Bootstrap SCSS Imports */
 @import 'bootstrap/scss/functions';
-@import 'variables'; /* Custom variables override default ones */
+@import 'variables'; /* Custom variables file */
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
-@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap/scss/root';
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/images';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
 
-/* 🇳🇵 Nepali Font Class with Fallbacks */
-.nepali-font {
-    font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
+/* 📦 Bootstrap Custom Overrides */
+.card {
+    @extend .rounded-lg;
+    border-radius: 15px !important;
+}
+.bg-primary {
+    background-color: #2c3e50 !important;
 }
 
-/* 🧠 Capitalize Each Word Helper */
+/* 🧩 Utility Classes */
+.container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.btn {
+    @apply rounded-lg px-4 py-2 font-medium transition-all duration-200;
+}
+
+.btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+}
+
+.btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800;
+}
+
+/* 🔄 Transition Utilities */
+.transition-transform {
+    @apply transition-transform duration-300 ease-in-out;
+}
+
+/* ✅ Sidebar Link Component */
+@layer components {
+    .sidebar-link {
+        @apply block w-full text-left px-4 py-2 text-base font-medium transition-all duration-300;
+    }
+}
+
+/* 🌙 Dark Mode Enhancements */
+.dark {
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+    --tw-border-opacity: 1;
+}
+
+.dark #translateBtn {
+    @apply bg-red-900 text-red-200;
+}
+
+.dark #translateBtn:hover {
+    @apply bg-red-800;
+}
+
+/* 🖼️ SVG Icons (Base64 Encoded) */
+#translateBtn::after {
+    content: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' class='w-4 h-4'%3E%3Cpath d='M13.079 2.125a3 3 0 00-2.158 0L3.05 5.05a3 3 0 00-1.856 2.773c0 2.227 1.874 3.054 4.284 3.774A4.853 4.853 0 0112 13.042a4.85 4.85 0 014.284-3.444c2.41-.72 4.284-1.547 4.284-3.774a3 3 0 00-1.856-2.773l-7.87-2.925zM12 16.042a4.85 4.85 0 01-4.284-3.444C5.306 11.987 3.432 11.16 3.432 8.9v-.032l6.698 2.49a3 3 0 002.14.094l6.698-2.49v.032c0 2.227-1.874 3.054-4.284 3.774A4.853 4.853 0 0112 16.042z'%3E%3C/path%3E%3C/svg%3E");
+    margin-left: 8px;
+}
+
+/* 🧠 Text Utilities */
 .capitalize-each-word {
     text-transform: capitalize;
 }
 
-/* 🔄 Smooth Transitions with GPU Acceleration */
-#translateBtn {
-    transition: transform 0.3s ease, background-color 0.3s ease;
-    will-change: transform;
+.all-caps {
+    text-transform: uppercase;
 }
 
-/* 🌙 Dark Mode Enhancements */
-.dark #translateBtn {
-    background: #991b1b; /* bg-red-900 */
-    color: #fecaca;      /* text-red-200 */
+/* 🧱 Responsive Typography */
+.text-sm {
+    @apply text-base sm:text-lg;
 }
 
-.dark #translateBtn:hover {
-    background: #7f1d1d; /* bg-red-800 */
+.text-xl {
+    @apply text-2xl md:text-3xl;
 }
 
-/* 🖼️ SVG Icon Inline (No external font dependency) */
-#translateBtn::after {
-    content: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor' class='w-4 h-4'><path d='M13.079 2.125a3 3 0 00-2.158 0L3.05 5.05a3 3 0 00-1.856 2.773c0 2.227 1.874 3.054 4.284 3.774A4.853 4.853 0 0112 13.042a4.85 4.85 0 014.284-3.444c2.41-.72 4.284-1.547 4.284-3.774a3 3 0 00-1.856-2.773l-7.87-2.925zM12 16.042a4.85 4.85 0 01-4.284-3.444C5.306 11.987 3.432 11.16 3.432 8.9v-.032l6.698 2.49a3 3 0 002.14.094l6.698-2.49v.032c0 2.227-1.874 3.054-4.284 3.774A4.853 4.853 0 0112 16.042z'/></svg>");
-    margin-left: 8px;
+/* 🌓 Dark Mode Toggle */
+.dark-mode-toggle {
+    @apply w-10 h-10 p-2 transition-all duration-300 ease-in-out;
+}
+
+.dark .dark-mode-toggle {
+    @apply bg-slate-800 text-yellow-300;
+}
+
+/* 🧮 Custom Form Controls */
+.form-control {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
+}
+
+/* 📱 Mobile Optimization */
+@media (max-width: 768px) {
+    .mobile-full-width {
+        @apply w-full;
+    }
+
+    .mobile-center {
+        @apply text-center;
+    }
 }

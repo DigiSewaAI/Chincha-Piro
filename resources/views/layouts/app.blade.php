@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ne" x-data="{ sidebarOpen: true, darkMode: localStorage.getItem('darkMode') === 'true' }"
+<html lang="ne"
+      x-data="{ sidebarOpen: true, darkMode: localStorage.getItem('darkMode') === 'true' }"
       x-init="() => { if (darkMode) document.documentElement.classList.add('dark'); }"
       :class="{'dark': darkMode}">
 <head>
@@ -7,12 +8,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>चिञ्‍चा पिरो - @yield('title')</title>
-    <!-- Tailwind CSS -->
+
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com "></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs @3.x.x/dist/cdn.min.js"></script>
-    <!-- Heroicons CDN -->
-    <script src="https://unpkg.com/ @heroicons/v2/24/outline/index.js"></script>
+
     <!-- Nepali Font Support -->
     <style>
         /* 📦 Preeti Font (Unicode Optimized) */
@@ -25,14 +27,17 @@
             font-style: normal;
             font-display: swap;
         }
+
         /* 🧠 Nepali Font Class */
         .nepali-font {
             font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
         }
+
         /* 🔄 Sidebar Transition */
         .sidebar-transition {
             transition: all 0.3s ease;
         }
+
         /* 🧠 Hide Alpine.js Elements Until Ready */
         [x-cloak] {
             display: none !important;
@@ -55,6 +60,7 @@
                     </svg>
                 </button>
             </div>
+
             <!-- Navigation -->
             <nav class="mt-4">
                 <a href="{{ route('home') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors">
@@ -63,12 +69,12 @@
                     </svg>
                     <span x-show="sidebarOpen" class="flex-1 nepali-font">मुख्य पृष्ठ</span>
                 </a>
+
                 @foreach ([
                     ['route' => 'dashboard', 'label' => 'ड्यासबोर्ड', 'icon' => 'chart-bar'],
                     ['route' => 'menu.index', 'label' => 'मेनु व्यवस्थापन', 'icon' => 'book-open'],
                     ['route' => 'gallery', 'label' => 'फोटो ग्यालरी', 'icon' => 'photo'],
                     ['route' => 'contact', 'label' => 'सम्पर्क जानकारी', 'icon' => 'phone'],
-                    // ✅ रूट नाम सच्याइएको
                     ['route' => 'reservations.index', 'label' => 'रिजर्भेसन', 'icon' => 'calendar']
                 ] as $item)
                 <a href="{{ route($item['route']) }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors">
@@ -86,7 +92,7 @@
                             @case('phone')
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                 @break
-                            @case('calendar') <!-- ✅ नयाँ क्यालेन्डर आइकन थपिएको -->
+                            @case('calendar')
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 @break
                         @endswitch
@@ -96,6 +102,7 @@
                 @endforeach
             </nav>
         </aside>
+
         <!-- 🖥️ Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- 🔝 Header -->
@@ -108,6 +115,7 @@
                     </a>
                     <h1 class="text-xl font-semibold text-gray-800 dark:text-gray-200 nepali-font">@yield('title')</h1>
                 </div>
+
                 <!-- 🌙 Dark Mode Toggle + Social Icons -->
                 <div class="flex items-center space-x-6">
                     <div class="flex space-x-4">
@@ -118,7 +126,7 @@
                         </a>
                         <a href="https://instagram.com/chinchapiro " target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-pink-600 transition-colors">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.78-2.618 6.98-6.98.057-1.28.072-1.689.072-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.618-6.78-6.98-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
                             </svg>
                         </a>
                         <a href="https://tiktok.com/ @chinchapiro" target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-gray-100 transition-colors">
@@ -127,6 +135,7 @@
                             </svg>
                         </a>
                     </div>
+
                     <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
                             class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-300"
                             aria-label="डार्क मोड स्विच गर्नुहोस्">
@@ -137,6 +146,7 @@
                     </button>
                 </div>
             </header>
+
             <!-- 📄 Main Content -->
             <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
                 <div class="hidden md:flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-6 nepali-font">
@@ -144,7 +154,9 @@
                     <span>/</span>
                     <span class="text-gray-600 dark:text-gray-300">@yield('title')</span>
                 </div>
+
                 @yield('content')
+
                 <!-- 📄 Footer -->
                 <footer class="mt-8 pt-6 border-t dark:border-gray-700">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
@@ -153,6 +165,7 @@
                             <h3 class="nepali-font text-lg font-bold text-red-600">हाम्रो ठेगाना</h3>
                             <p class="dark:text-gray-300">काठमाडौँ-३२, तिनकुने<br>गैरिगाउ, चिञ्‍चा पिरो भवन</p>
                         </div>
+
                         <!-- Social Media -->
                         <div class="flex flex-col items-center">
                             <h3 class="nepali-font text-lg font-bold text-red-600 mb-2">सामाजिक सञ्जाल</h3>
@@ -174,6 +187,7 @@
                                 </a>
                             </div>
                         </div>
+
                         <!-- Contact -->
                         <div class="text-center md:text-right">
                             <h3 class="nepali-font text-lg font-bold text-red-600">सम्पर्क</h3>
@@ -187,6 +201,7 @@
             </main>
         </div>
     </div>
+
     <!-- 📞 WhatsApp Button -->
     <a href="https://wa.me/9779846216711 " target="_blank"
        class="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
@@ -194,8 +209,10 @@
             <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2zm.01 1.67c2.33 0 4.52.91 6.17 2.56a8.677 8.677 0 012.55 6.17c0 4.84-3.94-8.78-8.78-8.78-1.48 0-2.93-.37-4.19-1.07l-.3-.15-3.12.82.83-3.04-.18-.28c-.76-1.15-1.17-2.49-1.17-3.88 0-4.84 3.94-8.78 8.78-8.78"/>
         </svg>
     </a>
+
     <!-- 📊 Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+
     @livewireScripts
 </body>
 </html>

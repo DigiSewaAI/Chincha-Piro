@@ -1,7 +1,9 @@
+<?php
+
+namespace App\Events;
+
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -10,20 +12,23 @@ class NewOrderEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $order;
+    public $orderData;
 
-    public function __construct($order)
+    public function __construct($orderData)
     {
-        $this->order = $order;
+        $this->orderData = $orderData;
     }
 
     public function broadcastOn()
     {
-        return new Channel('orders'); // Or PrivateChannel('orders')
+        return new Channel('orders');
     }
 
-    public function broadcastAs()
+    public function broadcastWith()
     {
-        return 'new-order';
+        return [
+            'order' => $this->orderData,
+            'message' => 'नयाँ अर्डर आएको छ!'
+        ];
     }
 }

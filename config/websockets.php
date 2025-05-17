@@ -3,7 +3,6 @@
 use BeyondCode\LaravelWebSockets\Dashboard\Http\Middleware\Authorize;
 
 return [
-
     /*
      * Set a custom dashboard configuration
      */
@@ -23,11 +22,11 @@ return [
      */
     'apps' => [
         [
-            'id' => env('PUSHER_APP_ID'),
-            'name' => env('APP_NAME'),
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'path' => env('PUSHER_APP_PATH'),
+            'id' => env('PUSHER_APP_ID', 'laravel-websockets'), // Default मान सेट गर्नुहोस्
+            'name' => env('APP_NAME', 'Laravel App'), // Default मान सेट गर्नुहोस्
+            'key' => env('PUSHER_APP_KEY', 'laravel-websockets'), // Default मान सेट गर्नुहोस्
+            'secret' => env('PUSHER_APP_SECRET', 'laravel-websockets'), // Default मान सेट गर्नुहोस्
+            'path' => env('PUSHER_APP_PATH', null), // Optional: यदि आवश्यक छ भने
             'capacity' => null,
             'enable_client_messages' => false,
             'enable_statistics' => true,
@@ -48,7 +47,7 @@ return [
      * Leave this empty if you want to accept requests from all hosts.
      */
     'allowed_origins' => [
-        //
+        'http://localhost:8000',
     ],
 
     /*

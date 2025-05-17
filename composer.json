@@ -16,6 +16,7 @@
         "laravel/ui": "^4.6",
         "livewire/livewire": "^3.6",
         "nikic/php-parser": "^4.19 || ^5.0",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.18",
         "tijsverkoyen/css-to-inline-styles": "2.2.5"
     },

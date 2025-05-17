@@ -19,7 +19,8 @@
         <a href="#menu" class="bg-red-600 text-white px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-700 transition-all">
           मेनु हेर्नुहोस्
         </a>
-        <a href="{{ route('order.index') }}" class="border-2 border-red-600 text-red-500 px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-600 hover:text-white transition-all">
+        <!-- ✅ Fixed route name from 'order.index' to 'orders.index' -->
+        <a href="{{ route('orders.index') }}" class="border-2 border-red-600 text-red-500 px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-600 hover:text-white transition-all">
           अहिले अर्डर गर्नुहोस्
         </a>
       </div>

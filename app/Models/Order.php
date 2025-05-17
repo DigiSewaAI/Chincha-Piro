@@ -6,12 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
-use App\Models\User;
-use App\Models\Dish;
-use App\Models\StatusHistory;
+use Illuminate\Database\Eloquent\Builder;
 
 class Order extends Model
 {
@@ -23,13 +18,17 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id',              // Related user
-        'customer_name',        // Customer name
-        'phone',                // Phone number
-        'address',              // Address
-        'special_instructions', // Special instructions
-        'preferred_delivery_time', // Preferred delivery time
-        'status',               // Order status (in English)
+        'user_id',
+        'customer_name',
+        'phone',
+        'address',
+        'special_instructions',
+        'preferred_delivery_time',
+        'payment_method',
+        'status',
+        'total_price',
+        'is_public', // Ensure this field exists in your database
+        'is_paid',
     ];
 
     /**
@@ -39,6 +38,7 @@ class Order extends Model
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',
         'preferred_delivery_time' => 'datetime',
+        'total_price' => 'decimal:2',
     ];
 
     /**
@@ -50,21 +50,42 @@ class Order extends Model
     }
 
     /**
-     * Many-to-many relationship to the Dish model through order_items pivot table.
+     * Relationship to the OrderItem model with eager loading.
      */
-    public function dishes(): BelongsToMany
+    public function items(): HasMany
     {
-        return $this->belongsToMany(Dish::class, 'order_items')
-            ->withPivot('quantity', 'price', 'special_instructions')
-            ->withTimestamps();
+        return $this->hasMany(OrderItem::class)->with('dish');
     }
 
     /**
-     * Relationship to the StatusHistory model.
+     * Relationship to the StatusHistory model with sorting.
      */
     public function statusHistories(): HasMany
     {
-        return $this->hasMany(StatusHistory::class);
+        return $this->hasMany(StatusHistory::class)->orderByDesc('created_at');
+    }
+
+    /**
+     * Scope to filter public orders.
+     */
+    public function scopePublicOrders(Builder $query): Builder
+    {
+        return $query->where('is_public', true);
+    }
+
+    /**
+     * Scope to filter orders by various criteria.
+     */
+    public function scopeFilter(Builder $query, array $filters): Builder
+    {
+        return $query
+            ->when($filters['status'] ?? null, fn($q) => $q->where('status', $filters['status']))
+            ->when($filters['search'] ?? null, function ($q) use ($filters) {
+                return $q->whereHas('user', fn($query) =>
+                    $query->where('name', 'like', "%{$filters['search']}%")
+                          ->orWhere('email', 'like', "%{$filters['search']}%")
+                )->orWhere('id', $filters['search']);
+            });
     }
 
     /**
@@ -75,7 +96,8 @@ class Order extends Model
         return match ($this->status) {
             'pending' => 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300',
             'confirmed' => 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
-            'processing' => 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300',
+            'preparing' => 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300',
+            'on_delivery' => 'bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300',
             'completed' => 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300',
             'cancelled' => 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
             default => 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
@@ -83,20 +105,24 @@ class Order extends Model
     }
 
     /**
-     * Calculate total order price including all items
+     * Calculate total order price (using stored value).
      */
     public function getTotalPriceAttribute(): float
     {
-        return $this->dishes->sum(function($dish) {
-            return $dish->pivot->quantity * $dish->pivot->price;
-        });
+        return $this->attributes['total_price'];
     }
 
     /**
-     * Get all items for this order
+     * Get payment method label in Nepali.
      */
-    public function items()
+    public function getPaymentMethodLabelAttribute(): string
     {
-        return $this->hasMany(\App\Models\OrderItem::class);
+        return match ($this->payment_method) {
+            'cash' => 'नगद',
+            'esewa' => 'ईसेवा',
+            'khalti' => 'खल्ती',
+            'card' => 'कार्ड',
+            default => ucfirst($this->payment_method),
+        };
     }
 }
