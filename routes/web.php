@@ -51,9 +51,10 @@ Route::get('/services', [HomeController::class, 'services'])->name('services');
 Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
 Route::get('/menu/{dish}', [MenuController::class, 'show'])->name('menu.show');
 
-// Public Reservations
-Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
-Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+// Public Reservation Routes (Only index for guests)
+Route::resource('reservations', ReservationController::class)
+    ->only(['index'])
+    ->names('reservations');
 
 // =======================
 // Authentication Routes
@@ -78,6 +79,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::get('/{order}/receipt', [OrderController::class, 'downloadReceipt'])->name('receipt');
     });
+
+    // Authenticated User Reservation Routes
+    Route::resource('reservations', ReservationController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy'])
+        ->names('reservations');
 });
 
 // =======================
@@ -130,6 +136,11 @@ Route::prefix('admin')
                 'update' => 'admin.dishes.update',
                 'destroy' => 'admin.dishes.destroy'
             ]);
+
+        // Admin Reservation Management
+        Route::resource('reservations', ReservationController::class)
+            ->except(['index', 'store'])
+            ->names('admin.reservations');
 
         // Admin Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
