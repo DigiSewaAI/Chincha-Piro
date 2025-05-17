@@ -14,7 +14,7 @@ class Gallery extends Model
         'category',
         'description',
         'type',
-        'file_path',
+        'image_path',
     ];
 
     // Optional: Accessor to detect if the item is a photo

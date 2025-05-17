@@ -5,72 +5,61 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Gallery;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth; // Authentication import
+use Illuminate\Support\Facades\Auth;
 
 class GalleryController extends Controller
 {
     /**
-     * Create a new controller instance.
-     *
-     * @return void
+     * Constructor: Apply middleware
      */
     public function __construct()
     {
-        // Admin-only methods require authentication
-        $this->middleware('auth')->only(['index', 'create', 'store', 'destroy']);
+        // Only authenticated users can access these admin methods
+        $this->middleware('auth')->only([
+            'index', 'create', 'store', 'edit', 'update', 'destroy'
+        ]);
     }
 
     /**
-     * Public gallery view
-     *
-     * @return \Illuminate\View\View
+     * Public gallery page
      */
     public function publicIndex()
     {
-        // 12 items per page for public view
         $galleryItems = Gallery::latest()->paginate(12);
         return view('gallery.index', compact('galleryItems'));
     }
 
     /**
-     * Admin gallery management view
-     *
-     * @return \Illuminate\View\View
+     * Admin gallery management list
      */
     public function index()
     {
-        // 20 items per page for admin view
+        $this->authorizeAdmin();
         $galleryItems = Gallery::latest()->paginate(20);
         return view('admin.gallery.index', compact('galleryItems'));
     }
 
     /**
-     * Show upload form for admin
-     *
-     * @return \Illuminate\View\View
+     * Show upload form (admin only)
      */
     public function create()
     {
-        // Ensure user is admin before showing form
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'Unauthorized access');
-        }
-
+        $this->authorizeAdmin();
         return view('admin.gallery.create');
     }
 
     /**
-     * Store new image/video
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * Store new image or video
      */
     public function store(Request $request)
     {
-        // Validate request
+        $this->authorizeAdmin();
+
         $request->validate([
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'type' => 'required|in:image,video',
+            'category' => 'required|in:dish,restaurant,video,other',
             'file' => [
                 'required',
                 'file',
@@ -79,33 +68,94 @@ class GalleryController extends Controller
             ],
         ]);
 
-        // Upload file to public disk
+        // Store file in public disk
         $path = $request->file('file')->store('gallery', 'public');
 
-        // Create gallery entry
+        // Save to database
         Gallery::create([
             'title' => $request->title,
+            'description' => $request->description,
             'type' => $request->type,
-            'file_path' => $path,
+            'category' => $request->category,
+            'image_path' => $path,
         ]);
 
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक थपियो।');
     }
 
     /**
-     * Delete gallery item
-     *
-     * @param  \App\Models\Gallery  $gallery
-     * @return \Illuminate\Http\RedirectResponse
+     * Edit gallery item
+     */
+    public function edit(Gallery $gallery)
+    {
+        $this->authorizeAdmin();
+        return view('admin.gallery.edit', compact('gallery'));
+    }
+
+    /**
+     * Update gallery item
+     */
+    public function update(Request $request, Gallery $gallery)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:image,video',
+            'category' => 'required|in:dish,restaurant,video,other',
+            'file' => [
+                'nullable',
+                'file',
+                'mimes:jpg,jpeg,png,gif,mp4,mov,avi,wmv,flv,webm',
+                'max:20480'
+            ],
+        ]);
+
+        // Update file if new file is uploaded
+        if ($request->hasFile('file')) {
+            // Delete old file
+            Storage::disk('public')->delete($gallery->image_path);
+
+            // Store new file
+            $gallery->image_path = $request->file('file')->store('gallery', 'public');
+        }
+
+        // Update other fields
+        $gallery->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'type' => $request->type,
+            'category' => $request->category,
+            'image_path' => $gallery->image_path,
+        ]);
+
+        return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक अपडेट भयो।');
+    }
+
+    /**
+     * Delete gallery item (admin only)
      */
     public function destroy(Gallery $gallery)
     {
+        $this->authorizeAdmin();
+
         // Delete physical file
-        Storage::disk('public')->delete($gallery->file_path);
+        Storage::disk('public')->delete($gallery->image_path);
 
         // Delete DB record
         $gallery->delete();
 
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक हटाइयो।');
+    }
+
+    /**
+     * Internal utility to restrict to admins only
+     */
+    private function authorizeAdmin()
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403, 'अनधिकृत पहुँच');
+        }
     }
 }

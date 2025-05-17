@@ -40,9 +40,9 @@ class GalleryController extends Controller
 
         if ($request->type === 'photo') {
             $path = $request->file('file')->store('gallery/photos', 'public');
-            $gallery->file_path = $path;
+            $gallery->image_path = $path;
         } else {
-            $gallery->file_path = $request->video_url;
+            $gallery->image_path = $request->video_url;
         }
 
         $gallery->save();
@@ -73,17 +73,17 @@ class GalleryController extends Controller
 
         if ($gallery->type === 'photo' && $request->hasFile('file')) {
             // पुरानो फाइल मेटाउनुहोस्
-            if ($gallery->file_path && Storage::disk('public')->exists($gallery->file_path)) {
-                Storage::disk('public')->delete($gallery->file_path);
+            if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
+                Storage::disk('public')->delete($gallery->image_path);
             }
 
             // नयाँ फाइल राख्नुहोस्
             $path = $request->file('file')->store('gallery/photos', 'public');
-            $gallery->file_path = $path;
+            $gallery->image_path = $path;
         }
 
         if ($gallery->type === 'video' && $request->filled('video_url')) {
-            $gallery->file_path = $request->video_url;
+            $gallery->image_path = $request->video_url;
         }
 
         $gallery->save();
@@ -94,8 +94,8 @@ class GalleryController extends Controller
     // आइटम मेटाउने
     public function destroy(Gallery $gallery)
     {
-        if ($gallery->type === 'photo' && $gallery->file_path) {
-            Storage::disk('public')->delete($gallery->file_path);
+        if ($gallery->type === 'photo' && $gallery->image_path) {
+            Storage::disk('public')->delete($gallery->image_path);
         }
 
         $gallery->delete();

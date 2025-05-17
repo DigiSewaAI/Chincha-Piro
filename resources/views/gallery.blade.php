@@ -13,12 +13,12 @@
                 @foreach($galleryItems as $item)
                     <div class="rounded overflow-hidden shadow-lg group bg-white dark:bg-gray-800">
                         @if($item->type === 'photo')
-                            <img src="{{ asset('storage/' . $item->file_path) }}"
+                            <img src="{{ asset('storage/' . $item->image_path) }}"
                                  alt="{{ $item->title }}"
                                  class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300">
                         @elseif($item->type === 'video')
                             <div class="aspect-w-16 aspect-h-9">
-                                <iframe src="{{ $item->file_path }}"
+                                <iframe src="{{ $item->image_path }}"
                                         title="{{ $item->title }}"
                                         allowfullscreen
                                         class="w-full h-full"></iframe>
