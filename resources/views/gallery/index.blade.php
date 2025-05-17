@@ -3,74 +3,83 @@
 @section('title', 'फोटो ग्यालरी - Chincha Piro')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold text-center text-orange-600 mb-10">हाम्रो फोटो ग्यालरी</h1>
+<div class="container mx-auto px-4 py-10">
+    <h1 class="text-4xl font-extrabold text-center text-orange-600 mb-8 nepali-font">
+        हाम्रो फोटो तथा भिडियो ग्यालरी
+    </h1>
 
-    <!-- Nepali Font Alert -->
-    <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
-        <p class="nepali-font">कृपया नेपाली फन्ट सक्रिय गर्नुहोस् ताकि सबै पाठ सही रूपमा प्रदर्शित होस्।</p>
+    <!-- Alert -->
+    <div class="bg-blue-100 border border-blue-300 text-blue-800 text-sm rounded-md p-4 mb-6 shadow-sm">
+        कृपया नेपाली फन्ट सक्रिय गर्नुहोस् ताकि सबै पाठ सही रूपमा प्रदर्शित होस्।
     </div>
 
-    <!-- Featured Images -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div class="relative group overflow-hidden rounded-xl shadow-lg">
+    <!-- Featured Section -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div class="relative overflow-hidden rounded-xl group shadow-md">
             <img src="{{ asset('images/gallery/featured-1.jpg') }}"
                  alt="फिचर्ड पकवान"
-                 class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                 class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                <div class="p-6 text-white">
+                <div class="p-4 text-white">
                     <h2 class="text-2xl font-bold">हाम्रा लोकप्रिय पकवानहरू</h2>
-                    <p class="mt-2 text-sm nepali-font">ताजा र स्वादिष्ट भोजनका केही उदाहरणहरू</p>
+                    <p class="text-sm mt-1 nepali-font">स्वादिलो पकवानहरूको झलक</p>
                 </div>
             </div>
         </div>
-
-        <div class="relative group overflow-hidden rounded-xl shadow-lg">
+        <div class="relative overflow-hidden rounded-xl group shadow-md">
             <img src="{{ asset('images/gallery/featured-2.jpg') }}"
                  alt="रेस्टुरेन्ट दृश्य"
-                 class="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110">
+                 class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                <div class="p-6 text-white">
+                <div class="p-4 text-white">
                     <h2 class="text-2xl font-bold">हाम्रो रेस्टुरेन्ट</h2>
-                    <p class="mt-2 text-sm nepali-font">आरामदायक वातावरणमा खाना स्वाद लिनुहोस्</p>
+                    <p class="text-sm mt-1 nepali-font">आरामदायक वातावरणमा भोजनको आनन्द</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Gallery Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <!-- Gallery Items -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @forelse($galleryItems as $item)
-        <div class="group relative overflow-hidden rounded-lg shadow-md">
-            <!-- Image -->
-            <img src="{{ asset('storage/' . $item->image_path) }}"
-                 alt="{{ $item->title }}"
-                 class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110">
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden group dark:bg-gray-800">
+            @if($item->type === 'photo')
+                <div class="relative">
+                    <img src="{{ asset('storage/' . $item->file_path) }}"
+                         alt="{{ $item->title }}"
+                         class="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-300">
 
-            <!-- Overlay -->
-            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <button onclick="openLightbox('{{ asset('storage/' . $item->image_path) }}', '{{ $item->title }}')"
-                        class="bg-white text-orange-600 px-4 py-2 rounded-lg font-medium flex items-center space-x-2 hover:bg-orange-100 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>हेर्नुहोस्</span>
-                </button>
-            </div>
+                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <button onclick="openLightbox('{{ asset('storage/' . $item->file_path) }}')"
+                                class="text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md font-medium transition">
+                            हेर्नुहोस्
+                        </button>
+                    </div>
+                </div>
+            @elseif($item->type === 'video')
+                <div class="aspect-video">
+                    <iframe src="{{ $item->file_path }}"
+                            title="{{ $item->title }}"
+                            class="w-full h-full rounded-t-md"
+                            allowfullscreen></iframe>
+                </div>
+            @endif
 
-            <!-- Title -->
-            <div class="p-3 bg-white dark:bg-gray-800 border-t">
-                <p class="font-medium text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font">{{ $item->category }}</p>
+            <!-- Meta Info -->
+            <div class="p-3 border-t dark:border-gray-700">
+                <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->type }}</p>
+                @if(!empty($item->description))
+                <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
+                @endif
             </div>
         </div>
         @empty
-        <div class="col-span-full text-center py-10">
-            <p class="text-xl text-gray-500 nepali-font">ग्यालरीमा कुनै तस्बिर छैन।</p>
+        <div class="col-span-full text-center py-12">
+            <p class="text-lg text-gray-600 nepali-font">हाललाई कुनै ग्यालरी आइटम उपलब्ध छैन।</p>
         </div>
         @endforelse
-    </div>
+    </section>
 
     <!-- Pagination -->
     <div class="mt-10">
@@ -78,10 +87,12 @@
     </div>
 
     <!-- Lightbox Modal -->
-    <div id="lightbox" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4" onclick="closeLightbox()">
+    <div id="lightbox"
+         class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4"
+         onclick="closeLightbox()">
         <div class="relative max-w-4xl w-full">
-            <img id="lightbox-img" src="" alt="Full Size Image" class="w-full h-auto rounded-lg">
-            <button class="absolute top-4 right-4 text-white bg-black/50 p-2 rounded-full hover:bg-black transition">
+            <img id="lightbox-img" src="" alt="Full Size Image" class="w-full h-auto rounded-lg shadow-lg">
+            <button class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition">
                 ✕
             </button>
         </div>
@@ -91,24 +102,31 @@
 
 @section('scripts')
 <script>
-    function openLightbox(src, title) {
-        document.getElementById('lightbox-img').src = src;
-        document.getElementById('lightbox').classList.remove('hidden');
+    function openLightbox(src) {
+        const modal = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        img.src = src;
+        modal.classList.remove('hidden');
     }
 
     function closeLightbox() {
-        document.getElementById('lightbox').classList.add('hidden');
-        document.getElementById('lightbox-img').src = '';
+        const modal = document.getElementById('lightbox');
+        const img = document.getElementById('lightbox-img');
+        modal.classList.add('hidden');
+        img.src = '';
     }
 
-    // ESC key सँगै lightbox बन्द गर्नुहोस्
+    // Escape key handler
     document.addEventListener('keydown', function(e) {
-        if (e.key === "Escape") closeLightbox();
+        if (e.key === "Escape") {
+            closeLightbox();
+        }
     });
 
-    // Toast Notification
     @if(session('success'))
-        alert("{{ session('success') }}");
+        window.addEventListener('DOMContentLoaded', () => {
+            alert("{{ session('success') }}");
+        });
     @endif
 </script>
 @endsection

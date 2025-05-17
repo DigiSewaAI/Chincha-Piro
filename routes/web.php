@@ -15,6 +15,12 @@ use App\Http\Controllers\{
     DishController
 };
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
 // =======================
 // Public Routes (Guest Access)
 // =======================
@@ -30,18 +36,14 @@ Route::prefix('orders')->name('orders.')->group(function () {
         Route::post('/new', [OrderController::class, 'store'])->name('store');
     });
 
-    // Public order listing
+    // Public order listing & tracking
     Route::get('/list', [OrderController::class, 'publicIndex'])->name('public.index');
-
-    // Order tracking (accessible to everyone)
     Route::get('/track/{order}', [OrderController::class, 'track'])->name('track');
-
-    // ✅ Order success page
-    Route::get('/success', [OrderController::class, 'success'])->name('success');
+    Route::get('/success', [OrderController::class, 'success'])->name('success'); // ✅ Success page
 });
 
 // Static Pages
-Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery');
+Route::get('/gallery', [GalleryController::class, 'publicIndex'])->name('gallery.public');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -51,10 +53,12 @@ Route::get('/services', [HomeController::class, 'services'])->name('services');
 Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
 Route::get('/menu/{dish}', [MenuController::class, 'show'])->name('menu.show');
 
-// Public Reservation Routes (Only index for guests)
-Route::resource('reservations', ReservationController::class)
-    ->only(['index'])
-    ->names('reservations');
+// Public Reservation Viewing (List Only)
+Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
+
+// Translation
+Route::get('/translate', [TranslateController::class, 'show'])->name('translate');
+Route::post('/translate-text', [TranslateController::class, 'translate'])->name('translate.text');
 
 // =======================
 // Authentication Routes
@@ -62,32 +66,31 @@ Route::resource('reservations', ReservationController::class)
 require __DIR__.'/auth.php';
 
 // =======================
-// Authenticated User Routes (Customer Access)
+// Authenticated User Routes
 // =======================
 Route::middleware(['auth', 'verified'])->group(function () {
-    // User Dashboard
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
 
-    // Profile Management
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // User Order History
+    // User Order History & Receipt
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/history', [OrderController::class, 'index'])->name('index');
         Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::get('/{order}/receipt', [OrderController::class, 'downloadReceipt'])->name('receipt');
     });
 
-    // Authenticated User Reservation Routes
+    // Authenticated User Reservations (Create/Edit)
     Route::resource('reservations', ReservationController::class)
-        ->only(['create', 'store', 'edit', 'update', 'destroy'])
-        ->names('reservations');
+        ->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 
 // =======================
-// Admin Routes (Protected by Role: 'admin')
+// Admin Routes (Role Protected)
 // =======================
 Route::prefix('admin')
     ->name('admin.')
@@ -96,58 +99,28 @@ Route::prefix('admin')
         // Admin Dashboard
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
 
-        // Admin Order Management
+        // Orders
         Route::resource('orders', OrderController::class)
-            ->except(['create', 'store']) // Already defined in public routes
-            ->names([
-                'index' => 'orders.index',
-                'show' => 'orders.show',
-                'edit' => 'orders.edit',
-                'update' => 'orders.update',
-                'destroy' => 'orders.destroy'
-            ]);
+            ->except(['create', 'store']);
 
-        // Admin-Specific Order Actions
-        Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])
-            ->name('orders.updateStatus');
-        Route::get('orders/{order}/invoice', [OrderController::class, 'generateInvoice'])
-            ->name('orders.invoice');
+        Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('orders/{order}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
 
-        // Admin Menu Management
+        // Menus (MenuController)
         Route::resource('menus', MenuController::class)
-            ->except(['show'])
-            ->names([
-                'index' => 'admin.menus.index',
-                'create' => 'admin.menus.create',
-                'store' => 'admin.menus.store',
-                'edit' => 'admin.menus.edit',
-                'update' => 'admin.menus.update',
-                'destroy' => 'admin.menus.destroy'
-            ]);
+            ->except(['show']);
 
-        // Admin Dish Management
-        Route::resource('dishes', DishController::class)
-            ->names([
-                'index' => 'admin.dishes.index',
-                'create' => 'admin.dishes.create',
-                'store' => 'admin.dishes.store',
-                'show' => 'admin.dishes.show',
-                'edit' => 'admin.dishes.edit',
-                'update' => 'admin.dishes.update',
-                'destroy' => 'admin.dishes.destroy'
-            ]);
+        // Dishes (DishController)
+        Route::resource('dishes', DishController::class);
 
-        // Admin Reservation Management
+        // Reservations
         Route::resource('reservations', ReservationController::class)
-            ->except(['index', 'store'])
-            ->names('admin.reservations');
+            ->except(['index', 'store']);
+
+        // Gallery
+        Route::resource('gallery', GalleryController::class)
+            ->except(['show']);
 
         // Admin Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     });
-
-// =======================
-// Translation Routes
-// =======================
-Route::get('/translate', [TranslateController::class, 'show'])->name('translate');
-Route::post('/translate-text', [TranslateController::class, 'translate'])->name('translate.text');

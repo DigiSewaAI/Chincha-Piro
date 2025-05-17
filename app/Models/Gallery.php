@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,20 @@ class Gallery extends Model
     protected $fillable = [
         'title',
         'category',
-        'image_path',
-        'description'
+        'description',
+        'type',
+        'file_path',
     ];
+
+    // Optional: Accessor to detect if the item is a photo
+    public function isPhoto(): bool
+    {
+        return $this->type === 'photo';
+    }
+
+    // Optional: Accessor to detect if the item is a video
+    public function isVideo(): bool
+    {
+        return $this->type === 'video';
+    }
 }
