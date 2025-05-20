@@ -15,42 +15,46 @@
 
     <!-- Featured Section -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <div class="relative overflow-hidden rounded-xl group shadow-md">
-            <img src="{{ asset('images/gallery/featured-1.jpg') }}"
-                 alt="फिचर्ड पकवान"
-                 class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                <div class="p-4 text-white">
-                    <h2 class="text-2xl font-bold">हाम्रा लोकप्रिय पकवानहरू</h2>
-                    <p class="text-sm mt-1 nepali-font">स्वादिलो पकवानहरूको झलक</p>
+        @if(isset($featuredItems) && $featuredItems->isNotEmpty())
+            @foreach($featuredItems as $item)
+                <div class="relative overflow-hidden rounded-xl group shadow-md">
+                    @if($item->type === 'photo')
+                        <img src="{{ asset('storage/' . $item->image_path) }}"
+                             alt="{{ $item->title }}"
+                             class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
+                    @else
+                        <iframe src="{{ $item->image_path }}"
+                                title="{{ $item->title }}"
+                                class="w-full h-80 group-hover:scale-110 transition-transform duration-500"
+                                allowfullscreen></iframe>
+                    @endif
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                        <div class="p-4 text-white">
+                            <h2 class="text-2xl font-bold">{{ $item->title }}</h2>
+                            <p class="text-sm mt-1 nepali-font">{{ $item->description }}</p>
+                        </div>
+                    </div>
                 </div>
+            @endforeach
+        @else
+            <div class="col-span-full text-center py-12">
+                <p class="text-lg text-gray-600 nepali-font">फिचर्ड आइटम उपलब्ध छैनन्।</p>
             </div>
-        </div>
-        <div class="relative overflow-hidden rounded-xl group shadow-md">
-            <img src="{{ asset('images/gallery/featured-2.jpg') }}"
-                 alt="रेस्टुरेन्ट दृश्य"
-                 class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                <div class="p-4 text-white">
-                    <h2 class="text-2xl font-bold">हाम्रो रेस्टुरेन्ट</h2>
-                    <p class="text-sm mt-1 nepali-font">आरामदायक वातावरणमा भोजनको आनन्द</p>
-                </div>
-            </div>
-        </div>
+        @endif
     </section>
 
     <!-- Gallery Items -->
     <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        @forelse($galleryItems as $item)
+        @forelse($galleries as $item)
         <div class="bg-white rounded-lg shadow-sm overflow-hidden group dark:bg-gray-800">
             @if($item->type === 'photo')
                 <div class="relative">
-                    <img src="{{ asset('storage/' . $item->file_path) }}"
+                    <img src="{{ asset('storage/' . $item->image_path) }}"
                          alt="{{ $item->title }}"
                          class="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-300">
 
                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <button onclick="openLightbox('{{ asset('storage/' . $item->file_path) }}')"
+                        <button onclick="openLightbox('{{ asset('storage/' . $item->image_path) }}')"
                                 class="text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md font-medium transition">
                             हेर्नुहोस्
                         </button>
@@ -58,7 +62,7 @@
                 </div>
             @elseif($item->type === 'video')
                 <div class="aspect-video">
-                    <iframe src="{{ $item->file_path }}"
+                    <iframe src="{{ $item->image_path }}"
                             title="{{ $item->title }}"
                             class="w-full h-full rounded-t-md"
                             allowfullscreen></iframe>
@@ -83,7 +87,7 @@
 
     <!-- Pagination -->
     <div class="mt-10">
-        {{ $galleryItems->links() }}
+        {{ $galleries->links() }}
     </div>
 
     <!-- Lightbox Modal -->

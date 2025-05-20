@@ -10,19 +10,21 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
+{
+    if (!Schema::hasColumn('orders', 'preferred_delivery_time')) {
         Schema::table('orders', function (Blueprint $table) {
             $table->dateTime('preferred_delivery_time')->nullable()->after('status');
         });
     }
+}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
+public function down(): void
+{
+    if (Schema::hasColumn('orders', 'preferred_delivery_time')) {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn('preferred_delivery_time');
         });
     }
+}
+
 };

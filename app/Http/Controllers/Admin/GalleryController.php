@@ -4,102 +4,169 @@ use App\Models\Gallery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
+use Illuminate\Validation\Rule;
 
 class GalleryController extends Controller
 {
-    // सूची देखाउने
-    public function index()
+    // Constructor for Middleware
+    public function __construct()
     {
-        $galleries = Gallery::latest()->paginate(10);
+        $this->middleware('auth');
+    }
+
+    // Index with Search & Sort
+    public function index(Request $request)
+    {
+        $query = Gallery::query();
+
+        // Search Functionality
+        if ($request->filled('search')) {
+            $query->where('title', 'like', "%{$request->search}%")
+                 ->orWhere('category', 'like', "%{$request->search}%");
+        }
+
+        // Sorting Functionality
+        if ($request->filled('sort')) {
+            $direction = $request->get('order', 'desc');
+            $query->orderBy($request->sort, $direction);
+        } else {
+            $query->latest();
+        }
+
+        $galleries = $query->paginate(10)->appends([
+            'search' => $request->search,
+            'sort' => $request->sort,
+            'order' => $request->order
+        ]);
+
         return view('admin.gallery.index', compact('galleries'));
     }
 
-    // नयाँ फार्म देखाउने
+    // Create Form
     public function create()
     {
         return view('admin.gallery.create');
     }
 
-    // डाटा सेभ गर्ने
+    // Store with Enhanced Validation
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:photo,video',
-            'file' => 'required_if:type,photo|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'type' => ['required', Rule::in(['photo', 'video'])],
+            'file' => 'required_if:type,photo|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'video_url' => 'required_if:type,video|url'
         ]);
 
-        $gallery = new Gallery();
-        $gallery->title = $request->title;
-        $gallery->category = $request->category;
-        $gallery->description = $request->description;
-        $gallery->type = $request->type;
+        try {
+            $gallery = new Gallery();
+            $gallery->title = $validated['title'];
+            $gallery->category = $validated['category'];
+            $gallery->description = $validated['description'];
+            $gallery->type = $validated['type'];
 
-        if ($request->type === 'photo') {
-            $path = $request->file('file')->store('gallery/photos', 'public');
-            $gallery->file_path = $path;
-        } else {
-            $gallery->file_path = $request->video_url;
+            if ($validated['type'] === 'photo') {
+                $path = $request->file('file')->store('gallery/photos', 'public');
+                $gallery->file_path = $path;
+            } else {
+                $gallery->file_path = $validated['video_url'];
+            }
+
+            $gallery->save();
+
+            return redirect()->route('admin.gallery.index')
+                ->with('success', 'आइटम सफलतापूर्वक थपियो!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'त्रुटि: ' . $e->getMessage());
         }
-
-        $gallery->save();
-
-        return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक थपियो!');
     }
 
-    // सम्पादन फार्म देखाउने
+    // Edit Form
     public function edit(Gallery $gallery)
     {
         return view('admin.gallery.edit', compact('gallery'));
     }
 
-    // आइटम अपडेट गर्ने
+    // Update with File Management
     public function update(Request $request, Gallery $gallery)
     {
-        $request->validate([
+        $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'video_url' => 'nullable|url'
+            'type' => ['required', Rule::in(['photo', 'video'])],
+            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048|required_if:type,photo',
+            'video_url' => 'nullable|url|required_if:type,video'
         ]);
 
-        $gallery->title = $request->title;
-        $gallery->category = $request->category;
-        $gallery->description = $request->description;
+        try {
+            $gallery->title = $validated['title'];
+            $gallery->category = $validated['category'];
+            $gallery->description = $validated['description'];
 
-        if ($gallery->type === 'photo' && $request->hasFile('file')) {
-            // पुरानो फाइल मेटाउनुहोस्
-            if ($gallery->file_path && Storage::disk('public')->exists($gallery->file_path)) {
+            if ($gallery->type === 'photo' && $request->hasFile('file')) {
+                // Delete old file
+                if ($gallery->file_path && Storage::disk('public')->exists($gallery->file_path)) {
+                    Storage::disk('public')->delete($gallery->file_path);
+                }
+
+                // Store new file
+                $path = $request->file('file')->store('gallery/photos', 'public');
+                $gallery->file_path = $path;
+            } elseif ($gallery->type === 'video' && $request->filled('video_url')) {
+                $gallery->file_path = $validated['video_url'];
+            }
+
+            $gallery->save();
+
+            return redirect()->route('admin.gallery.index')
+                ->with('success', 'आइटम सफलतापूर्वक अपडेट गरियो!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'त्रुटि: ' . $e->getMessage());
+        }
+    }
+
+    // Soft Delete with Confirmation
+    public function destroy(Gallery $gallery)
+    {
+        try {
+            if ($gallery->type === 'photo' && $gallery->file_path) {
                 Storage::disk('public')->delete($gallery->file_path);
             }
 
-            // नयाँ फाइल राख्नुहोस्
-            $path = $request->file('file')->store('gallery/photos', 'public');
-            $gallery->file_path = $path;
+            $gallery->delete();
+
+            return back()->with('success', 'आइटम सफलतापूर्वक मेटाइयो!');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'त्रुटि: ' . $e->getMessage());
         }
-
-        if ($gallery->type === 'video' && $request->filled('video_url')) {
-            $gallery->file_path = $request->video_url;
-        }
-
-        $gallery->save();
-
-        return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक अपडेट गरियो!');
     }
 
-    // आइटम मेटाउने
-    public function destroy(Gallery $gallery)
+    // Status Toggle
+    public function toggleStatus(Gallery $gallery)
     {
-        if ($gallery->type === 'photo' && $gallery->file_path) {
-            Storage::disk('public')->delete($gallery->file_path);
-        }
+        $gallery->status = !$gallery->status;
+        $gallery->save();
 
-        $gallery->delete();
+        return back()->with('success', 'स्टेटस सफलतापूर्वक बदलियो!');
+    }
 
-        return back()->with('success', 'आइटम सफलतापूर्वक मेटाइयो!');
+    // Mark as Featured
+    public function markFeatured(Gallery $gallery)
+    {
+        // Unmark all others
+        Gallery::where('id', '!=', $gallery->id)
+               ->where('featured', true)
+               ->update(['featured' => false]);
+
+        $gallery->featured = true;
+        $gallery->save();
+
+        return back()->with('success', 'फीचर्ड आइटम सफलतापूर्वक चयन गरियो!');
     }
 }

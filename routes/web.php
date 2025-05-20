@@ -119,7 +119,13 @@ Route::prefix('admin')
 
         // Gallery
         Route::resource('gallery', GalleryController::class)
-            ->except(['show']);
+            ->except(['show']); // 'show' is handled by public route
+
+        // Custom Gallery Actions
+        Route::patch('gallery/{gallery}/toggle-status', [GalleryController::class, 'toggleStatus'])
+            ->name('gallery.toggleStatus');
+        Route::post('gallery/{gallery}/mark-featured', [GalleryController::class, 'markFeatured'])
+            ->name('gallery.markFeatured');
 
         // Admin Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');

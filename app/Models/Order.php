@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
 class Order extends Model
@@ -27,7 +28,7 @@ class Order extends Model
         'payment_method',
         'status',
         'total_price',
-        'is_public', // Ensure this field exists in your database
+        'is_public',
         'is_paid',
     ];
 
@@ -55,6 +56,16 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class)->with('dish');
+    }
+
+    /**
+     * New Relationship: Order to Dish through OrderItem pivot table.
+     */
+    public function dishes(): BelongsToMany
+    {
+        return $this->belongsToMany(Dish::class, 'order_items')
+                    ->withPivot(['quantity', 'unit_price']) // Ensure column name matches the database
+                    ->withTimestamps();
     }
 
     /**
@@ -102,14 +113,6 @@ class Order extends Model
             'cancelled' => 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
             default => 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-300',
         };
-    }
-
-    /**
-     * Calculate total order price (using stored value).
-     */
-    public function getTotalPriceAttribute(): float
-    {
-        return $this->attributes['total_price'];
     }
 
     /**

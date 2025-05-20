@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('galleries', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');           // आइटमको शीर्षक (उदाहरण: "हाम्रा पकवानहरू")
-            $table->string('category');        // श्रेणी (उदाहरण: "पकवान", "रेस्टुरेन्ट")
-            $table->enum('type', ['photo', 'video']); // फोटो वा भिडियो
-            $table->text('file_path');         // फाइल पाथ (इमेज: "gallery/food-1.jpg", भिडियो: "https://youtu.be/... ")
-            $table->text('description')->nullable();  // वैकल्पिक विवरण
-            $table->timestamps();
-        });
+      Schema::create('galleries', function (Blueprint $table) {
+    $table->id();
+    $table->string('title');
+    $table->string('category');
+    $table->text('description')->nullable();
+    $table->enum('type', ['photo', 'video']);
+    $table->string('image_path');
+    $table->boolean('is_active')->default(true);  // यहाँ 'status' को सट्टामा 'is_active' प्रयोग गर्नुहोस्
+    $table->boolean('featured')->default(false);
+    $table->timestamps();
+});
     }
 
     /**

@@ -6,9 +6,6 @@ use Illuminate\Database\Seeder;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Dish;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class OrderSeeder extends Seeder
 {
@@ -17,49 +14,52 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Ensure at least one user exists
-        $user = User::first();
-
-        if (!$user) {
-            $user = User::factory()->create([
+        // 1. User नभएमा बनाउने
+        $user = User::firstOrCreate(
+            ['email' => 'default@example.com'],
+            [
                 'name' => 'Default User',
-                'email' => 'default@example.com',
-                'password' => Hash::make('password'),
-                'role' => 'user', // Adjust based on your User model
+                'password' => bcrypt('password'),
+                'role' => 'user',
                 'is_active' => true,
-            ]);
-        }
+            ]
+        );
 
-        // 2. Ensure there are dishes in the database
-        if (!Dish::exists()) {
-            $this->command->warn("⚠️ No dishes found. Please seed dishes first.");
+        // 2. Dish नभएमा रोक्ने
+        if (Dish::count() === 0) {
+            $this->command->error('❌ पहिले Dish सिड गर्नुहोस्!');
             return;
         }
 
-        // 3. Generate 10 orders
-        for ($i = 0; $i < 10; $i++) {
-            // Random dish
-            $dish = Dish::inRandomOrder()->first();
+        // 3. 20 ओटा ऑर्डर क्रिएट गर्ने
+        Order::factory(20)->create(['user_id' => $user->id])
+            ->each(function ($order) {
+                // 4. 1-5 ओटा खाना छान्ने
+                $dishes = Dish::inRandomOrder()->take(rand(1, 5))->get();
+                $totalPrice = 0; // total_price को लागि variable
 
-            // Calculate total price based on quantity and dish price
-            $quantity = rand(1, 5);
-            $totalPrice = $dish->price * $quantity;
+                // 5. प्रत्येक खानालाई जोड्ने
+                foreach ($dishes as $dish) {
+                    $quantity = rand(1, 3);
+                    $unitPrice = $dish->price;
+                    $itemTotal = $unitPrice * $quantity;
 
-            // Create the order
-            Order::create([
-                'user_id' => $user->id,
-                'dish_id' => $dish->id,
-                'quantity' => $quantity,
-                'total_price' => $totalPrice,
-                'customer_name' => fake()->name,
-                'phone' => fake()->phoneNumber,
-                'address' => fake()->address,
-                'special_instructions' => fake()->sentence(6),
-                'status' => ['pending', 'confirmed', 'processing', 'completed', 'cancelled'][rand(0, 4)],
-                'preferred_delivery_time' => now()->addHours(rand(1, 24))->toDateTimeString(),
-            ]);
-        }
+                    $order->dishes()->attach($dish->id, [
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,   // ✅ price को सट्टा unit_price प्रयोग गरिएको
+                        'total_price' => $itemTotal,  // ✅ pivot table मा total_price प्रयोग गरिएको
+                    ]);
 
-        $this->command->info("✅ 10 orders seeded successfully.");
+                    $totalPrice += $itemTotal;
+                }
+
+                // 6. ऑर्डर अपडेट गर्ने (total_price प्रयोग गरिएको)
+                $order->update([
+                    'total_price' => $totalPrice, // ✅ सही column: total_price
+                    'status' => 'pending' // confirmed, cancelled, etc.
+                ]);
+            });
+
+        $this->command->info('✅ 20 ऑर्डर सिड गरियो!');
     }
 }
