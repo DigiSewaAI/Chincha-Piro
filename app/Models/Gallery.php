@@ -19,9 +19,13 @@ class Gallery extends Model
         'category',
         'description',
         'type',
+<<<<<<< HEAD
         'image_path',  // सही कलम नाम (तपाईंले माइग्रेशनमा जस्तो प्रयोग गर्नुभएको छ)
         'is_active',
         'featured'
+=======
+        'image_path',
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
     ];
 
     /**

@@ -3,10 +3,15 @@
 @section('title', $gallery ? 'ग्यालरी सम्पादन गर्नुहोस्' : 'नयाँ ग्यालरी थप्नुहोस्')
 
 @section('content')
+<<<<<<< HEAD
 <div class="container-fluid px-4 py-5">
     <h1 class="text-3xl font-bold mb-6 nepali-font">
         {{ $gallery ? 'ग्यालरी सम्पादन गर्नुहोस्' : 'नयाँ ग्यालरी थप्नुहोस्' }}
     </h1>
+=======
+<div class="container mx-auto px-4 py-10">
+    <h1 class="text-3xl font-bold text-center text-red-600 mb-8 nepali-font">नयाँ ग्यालरी आइटम थप्नुहोस्</h1>
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
 
     @if($errors->any())
         <div class="alert alert-danger mb-4">
@@ -23,6 +28,7 @@
             <form action="{{ $gallery ? route('admin.gallery.update', $gallery->id) : route('admin.gallery.store') }}"
                   method="POST" enctype="multipart/form-data" class="row g-4">
 
+<<<<<<< HEAD
                 @csrf
                 @if($gallery)
                     @method('PUT')
@@ -111,12 +117,70 @@
                 </div>
             </form>
         </div>
+=======
+            <!-- Title -->
+            <div>
+                <label for="title" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">शीर्षक</label>
+                <input type="text" name="title" id="title" required
+                       value="{{ old('title') }}"
+                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="description" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">वर्णन (वैकल्पिक)</label>
+                <textarea name="description" id="description"
+                          class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          rows="3">{{ old('description') }}</textarea>
+            </div>
+
+            <!-- Type Selection -->
+            <div>
+                <label for="type" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">प्रकार</label>
+                <select name="type" id="type" required onchange="toggleFields()"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">-- छान्नुहोस् --</option>
+                    <option value="image" {{ old('type') == 'image' ? 'selected' : '' }}>फोटो</option>
+                    <option value="video" {{ old('type') == 'video' ? 'selected' : '' }}>भिडियो</option>
+                </select>
+            </div>
+
+            <!-- Category -->
+            <div>
+                <label for="category" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">श्रेणी</label>
+                <select name="category" id="category" required
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">-- छान्नुहोस् --</option>
+                    <option value="dish" {{ old('category') == 'dish' ? 'selected' : '' }}>खाना</option>
+                    <option value="restaurant" {{ old('category') == 'restaurant' ? 'selected' : '' }}>रेस्टुरेन्ट</option>
+                    <option value="video" {{ old('category') == 'video' ? 'selected' : '' }}>भिडियो</option>
+                    <option value="other" {{ old('category') == 'other' ? 'selected' : '' }}>अन्य</option>
+                </select>
+            </div>
+
+            <!-- File Upload -->
+            <div id="file-field">
+                <label for="file" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">फाइल अपलोड गर्नुहोस्</label>
+                <input type="file" name="file" id="file" required
+                       class="mt-1 block w-full text-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-red-100 file:text-red-700 hover:file:bg-red-200">
+            </div>
+
+            <!-- Submit -->
+            <div class="text-center">
+                <button type="submit"
+                        class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-md transition nepali-font">
+                    सेभ गर्नुहोस्
+                </button>
+            </div>
+        </form>
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
     </div>
 </div>
 @endsection
 
 @section('scripts')
 <script>
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.getElementById('typeSelect');
     const photoFields = document.getElementById('photoFields');
@@ -126,6 +190,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedType = typeSelect.value;
         photoFields.style.display = selectedType === 'photo' ? 'block' : 'none';
         videoFields.style.display = selectedType === 'video' ? 'block' : 'none';
+=======
+    function toggleFields() {
+        const type = document.getElementById('type').value;
+        const fileField = document.getElementById('file-field');
+
+        // Always show file field for both image and video
+        fileField.style.display = type ? 'block' : 'none';
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
     }
 
     if (typeSelect) {
