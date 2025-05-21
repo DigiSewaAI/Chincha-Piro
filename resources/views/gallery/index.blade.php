@@ -22,8 +22,13 @@
                         <img src="{{ asset('storage/' . $item->image_path) }}"
                              alt="{{ $item->title }}"
                              class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
-                    @else
-                        <iframe src="{{ $item->image_path }}"
+                    @elseif($item->type === 'video')
+                        <video controls class="w-full h-80 group-hover:scale-110 transition-transform duration-500">
+                            <source src="{{ $item->video_url }}" type="video/mp4">
+                            तपाईको browser ले यो भिडियो support गर्दैन।
+                        </video>
+                    @elseif($item->type === 'external_video')
+                        <iframe src="{{ $item->video_url }}"
                                 title="{{ $item->title }}"
                                 class="w-full h-80 group-hover:scale-110 transition-transform duration-500"
                                 allowfullscreen></iframe>
@@ -62,7 +67,14 @@
                 </div>
             @elseif($item->type === 'video')
                 <div class="aspect-video">
-                    <iframe src="{{ $item->image_path }}"
+                    <video controls class="w-full h-full rounded-t-md">
+                        <source src="{{ $item->video_url }}" type="video/mp4">
+                        तपाईको browser ले यो भिडियो support गर्दैन।
+                    </video>
+                </div>
+            @elseif($item->type === 'external_video')
+                <div class="aspect-video">
+                    <iframe src="{{ $item->video_url }}"
                             title="{{ $item->title }}"
                             class="w-full h-full rounded-t-md"
                             allowfullscreen></iframe>
@@ -72,7 +84,7 @@
             <!-- Meta Info -->
             <div class="p-3 border-t dark:border-gray-700">
                 <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->type }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->typeLabel }}</p>
                 @if(!empty($item->description))
                 <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
                 @endif

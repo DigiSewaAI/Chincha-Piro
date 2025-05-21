@@ -19,7 +19,7 @@ class Gallery extends Model
         'category',
         'description',
         'type',
-        'image_path',  // सही कलम नाम (तपाईंले माइग्रेशनमा जस्तो प्रयोग गर्नुभएको छ)
+        'image_path',
         'is_active',
         'featured'
     ];
@@ -30,7 +30,7 @@ class Gallery extends Model
      * @var array
      */
     protected $casts = [
-        'is_active' => 'boolean',  // 'status' को सट्टामा 'is_active'
+        'is_active' => 'boolean',
         'featured' => 'boolean'
     ];
 
@@ -39,25 +39,45 @@ class Gallery extends Model
      */
     public function getFileUrlAttribute()
     {
-        return $this->isPhoto()
-            ? asset('storage/' . $this->image_path)  // 'file_path' को सट्टामा 'image_path'
-            : $this->image_path;
+        if ($this->isPhoto()) {
+            return asset('storage/' . $this->image_path);
+        }
+
+        if ($this->isLocalVideo()) {
+            return asset('storage/' . $this->image_path);
+        }
+
+        if ($this->isExternalVideo()) {
+            return $this->image_path;
+        }
+
+        return null;
     }
 
     /**
      * Get the photo URL (alias for file_url)
      */
-    public function getPhotoUrlAttribute()
+    public function getPhotoUrlAttribute(): ?string
     {
-        return $this->isPhoto() ? $this->file_url : null;
+        return $this->isPhoto()
+            ? asset('storage/' . $this->image_path)
+            : null;
     }
 
     /**
      * Get the video URL (alias for file_url)
      */
-    public function getVideoUrlAttribute()
+    public function getVideoUrlAttribute(): ?string
     {
-        return $this->isVideo() ? $this->file_url : null;
+        if ($this->isLocalVideo()) {
+            return asset('storage/' . $this->image_path);
+        }
+
+        if ($this->isExternalVideo()) {
+            return $this->image_path;
+        }
+
+        return null;
     }
 
     /**
@@ -69,11 +89,27 @@ class Gallery extends Model
     }
 
     /**
-     * Check if the item is a video
+     * Check if the item is a local video
+     */
+    public function isLocalVideo(): bool
+    {
+        return $this->type === 'local_video';
+    }
+
+    /**
+     * Check if the item is an external video
+     */
+    public function isExternalVideo(): bool
+    {
+        return $this->type === 'external_video';
+    }
+
+    /**
+     * Check if the item is a video (local or external)
      */
     public function isVideo(): bool
     {
-        return $this->type === 'video';
+        return in_array($this->type, ['local_video', 'external_video']);
     }
 
     /**
@@ -98,7 +134,7 @@ class Gallery extends Model
     public function getStatusBadgeAttribute(): array
     {
         return [
-            'class' => $this->is_active  // 'status' को सट्टामा 'is_active'
+            'class' => $this->is_active
                 ? 'badge bg-success'
                 : 'badge bg-danger',
             'text' => $this->is_active ? 'सक्रिय' : 'निष्क्रिय'
@@ -137,11 +173,12 @@ class Gallery extends Model
     /**
      * Static method to get type options in Nepali
      */
-    public static function getTypeOptions(): array
-    {
-        return [
-            'photo' => 'फोटो',
-            'video' => 'भिडियो'
-        ];
-    }
+    public static function getTypeOptions()
+{
+    return [
+        'photo' => 'फोटो',
+        'video' => 'बाह्य भिडियो (YouTube)',
+        'local_video' => 'स्थानीय भिडियो' // ✅ थप्नुहोस्
+    ];
+}
 }

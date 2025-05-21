@@ -16,7 +16,7 @@ return new class extends Migration
     $table->string('title');
     $table->string('category');
     $table->text('description')->nullable();
-    $table->enum('type', ['photo', 'video']);
+    $table->enum('type', ['photo', 'video', 'local_video'])->default('photo');
     $table->string('image_path');
     $table->boolean('is_active')->default(true);  // यहाँ 'status' को सट्टामा 'is_active' प्रयोग गर्नुहोस्
     $table->boolean('featured')->default(false);

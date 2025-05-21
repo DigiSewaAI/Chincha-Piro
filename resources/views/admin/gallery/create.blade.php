@@ -31,7 +31,8 @@
                 <!-- Title -->
                 <div class="col-md-6">
                     <label class="form-label nepali-font">शीर्षक</label>
-                    <input type="text" name="title" class="form-control" value="{{ old('title', $gallery->title ?? '') }}" required>
+                    <input type="text" name="title" class="form-control"
+                           value="{{ old('title', $gallery->title ?? '') }}" required>
                 </div>
 
                 <!-- Category -->
@@ -79,21 +80,26 @@
                 </div>
 
                 <!-- File Upload -->
-                <div id="photoFields" class="col-md-12 mt-3 {{ old('type', $gallery->type ?? '') == 'photo' || !$gallery ? 'd-block' : 'd-none' }}">
-                    <label class="form-label nepali-font">छवि अपलोड गर्नुहोस्</label>
-                    <input type="file" name="file" class="form-control" accept="image/*">
+                <div id="fileUploadField" class="col-md-12 mt-3">
+                    <label class="form-label nepali-font" id="fileLabel">फाइल अपलोड गर्नुहोस्</label>
+                    <input type="file" name="file" class="form-control" id="fileInput" accept="image/*,video/*">
 
                     @if($gallery && $gallery->isPhoto())
                         <img src="{{ asset('storage/' . $gallery->image_path) }}" class="img-thumbnail mt-2" style="max-height: 200px;">
+                    @elseif($gallery && $gallery->isVideo())
+                        <video controls class="mt-2" style="max-height: 200px;">
+                            <source src="{{ asset('storage/' . $gallery->image_path) }}" type="video/mp4">
+                            तपाईको ब्राउजरले यो भिडियो सपोर्ट गर्दैन।
+                        </video>
                     @endif
                 </div>
 
                 <!-- Video URL -->
-                <div id="videoFields" class="col-md-12 mt-3 {{ old('type', $gallery->type ?? '') == 'video' ? 'd-block' : 'd-none' }}">
+                <div id="videoFields" class="col-md-12 mt-3 d-none">
                     <label class="form-label nepali-font">भिडियो URL</label>
-                    <input type="url" name="video_url" class="form-control"
-                           placeholder="उदाहरण: https://youtu.be/xxxxxxx    "
-                           value="{{ old('video_url', $gallery->image_path ?? '') }}">
+                    <input type="url" name="video_url" id="videoUrlInput" class="form-control"
+                           placeholder="उदाहरण: https://youtu.be/xxxxxxx"
+                           value="{{ old('video_url', $gallery?->type == 'external_video' ? $gallery->image_path : '') }}">
                 </div>
 
                 <!-- Description -->
@@ -117,15 +123,42 @@
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const typeSelect = document.getElementById('typeSelect');
-    const photoFields = document.getElementById('photoFields');
+    const fileInput = document.getElementById('fileInput');
+    const fileLabel = document.getElementById('fileLabel');
+    const fileUploadField = document.getElementById('fileUploadField');
     const videoFields = document.getElementById('videoFields');
+    const videoUrlInput = document.getElementById('videoUrlInput');
 
     function toggleFields() {
         const selectedType = typeSelect.value;
-        photoFields.style.display = selectedType === 'photo' ? 'block' : 'none';
-        videoFields.style.display = selectedType === 'video' ? 'block' : 'none';
+
+        // Reset
+        fileInput.removeAttribute('required');
+        if (videoUrlInput) videoUrlInput.removeAttribute('required');
+        fileInput.accept = "image/*,video/*";
+
+        if (selectedType === 'photo') {
+            fileLabel.textContent = 'छवि अपलोड गर्नुहोस्';
+            fileInput.accept = "image/*";
+            fileUploadField.style.display = 'block';
+            videoFields.classList.add('d-none');
+            fileInput.setAttribute('required', 'required');
+        } else if (selectedType === 'video') {
+            fileLabel.textContent = 'भिडियो अपलोड गर्नुहोस्';
+            fileInput.accept = "video/*";
+            fileUploadField.style.display = 'block';
+            videoFields.classList.add('d-none');
+            fileInput.setAttribute('required', 'required');
+        } else if (selectedType === 'external_video') {
+            fileUploadField.style.display = 'none';
+            videoFields.classList.remove('d-none');
+            if (videoUrlInput) videoUrlInput.setAttribute('required', 'required');
+        } else {
+            fileUploadField.style.display = 'none';
+            videoFields.classList.add('d-none');
+        }
     }
 
     if (typeSelect) {

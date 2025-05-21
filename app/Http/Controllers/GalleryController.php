@@ -76,42 +76,17 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
-        $rules = [
-            'title' => 'required|string|max:255',
-            'category' => ['required', Rule::in(array_keys(Gallery::getCategoryOptions()))],
-            'type' => ['required', Rule::in(array_keys(Gallery::getTypeOptions()))],
-            'is_active' => 'required|boolean',
-            'featured' => 'required|boolean',
-        ];
-
-        if ($request->input('type') === 'photo') {
-            $rules['file'] = [
-                'required', 'file', 'mimes:jpg,jpeg,png,gif', 'max:20480'
-            ];
-        } else {
-            $rules['video_url'] = [
-                'required', 'url',
-                'regex:/^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/'
-            ];
-        }
-
-        $request->validate($rules);
-
-        $path = null;
-        if ($request->input('type') === 'photo') {
-            $path = $request->file('file')->store('gallery', 'public');
-        } elseif ($request->input('type') === 'video') {
-            $path = $request->input('video_url');
-        }
+        $validated = $this->validateGallery($request);
+        $path = $this->handleFileUpload($request);
 
         Gallery::create([
-            'title' => $request->title,
-            'category' => $request->category,
-            'description' => $request->description,
-            'type' => $request->type,
+            'title' => $validated['title'],
+            'category' => $validated['category'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
             'image_path' => $path,
-            'is_active' => $request->boolean('is_active'),
-            'featured' => $request->boolean('featured'),
+            'is_active' => $validated['is_active'],
+            'featured' => $validated['featured'],
         ]);
 
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक थपियो।');
@@ -126,47 +101,26 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
-        $rules = [
-            'title' => 'required|string|max:255',
-            'category' => ['required', Rule::in(array_keys(Gallery::getCategoryOptions()))],
-            'type' => ['required', Rule::in(array_keys(Gallery::getTypeOptions()))],
-            'is_active' => 'required|boolean',
-            'featured' => 'required|boolean',
-        ];
-
-        if ($request->input('type') === 'photo') {
-            $rules['file'] = [
-                'nullable', 'file', 'mimes:jpg,jpeg,png,gif', 'max:20480'
-            ];
-        } else {
-            $rules['video_url'] = [
-                'nullable', 'url',
-                'regex:/^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/'
-            ];
-        }
-
-        $request->validate($rules);
+        $validated = $this->validateGallery($request, $gallery);
+        $newPath = $this->handleFileUpload($request);
 
         $data = [
-            'title' => $request->title,
-            'category' => $request->category,
-            'description' => $request->description,
-            'type' => $request->type,
-            'is_active' => $request->boolean('is_active'),
-            'featured' => $request->boolean('featured'),
+            'title' => $validated['title'],
+            'category' => $validated['category'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'is_active' => $validated['is_active'],
+            'featured' => $validated['featured'],
         ];
 
-        if ($request->input('type') === 'photo' && $request->hasFile('file')) {
-            if ($gallery->type === 'photo' && $gallery->image_path) {
+        if ($newPath !== null) {
+            if ($gallery->isPhoto() || $gallery->isLocalVideo()) {
                 Storage::disk('public')->delete($gallery->image_path);
             }
-            $data['image_path'] = $request->file('file')->store('gallery', 'public');
-        } elseif ($request->input('type') === 'video') {
-            $data['image_path'] = $request->input('video_url');
+            $data['image_path'] = $newPath;
         }
 
         $gallery->update($data);
-
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक अपडेट गरियो।');
     }
 
@@ -210,12 +164,57 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
-        if ($gallery->type === 'photo' && $gallery->image_path) {
+        if ($gallery->isPhoto() || $gallery->isLocalVideo()) {
             Storage::disk('public')->delete($gallery->image_path);
         }
 
         $gallery->delete();
 
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक हटाइयो।');
+    }
+
+    /**
+     * Validate gallery form data
+     */
+    private function validateGallery(Request $request, Gallery $gallery = null): array
+    {
+        $rules = [
+            'title' => 'required|string|max:255',
+            'category' => ['required', Rule::in(array_keys(Gallery::getCategoryOptions()))],
+            'type' => ['required', Rule::in(array_keys(Gallery::getTypeOptions()))],
+            'description' => 'nullable|string',
+            'is_active' => 'required|boolean',
+            'featured' => 'required|boolean',
+        ];
+
+        $type = $request->input('type');
+
+        if ($type === 'photo') {
+            $rules['file'] = [$gallery ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,gif', 'max:20480'];
+        } elseif ($type === 'local_video') {
+            $rules['file'] = [$gallery ? 'nullable' : 'required', 'file', 'mimes:mp4,mov,ogg,qt', 'max:102400'];
+        } elseif ($type === 'external_video') {
+            $rules['video_url'] = [$gallery ? 'nullable' : 'required', 'url', 'regex:/^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/'];
+        }
+
+        return $request->validate($rules);
+    }
+
+    /**
+     * Handle file upload or external video URL
+     */
+    private function handleFileUpload(Request $request): ?string
+    {
+        $type = $request->input('type');
+
+        if (in_array($type, ['photo', 'local_video']) && $request->hasFile('file')) {
+            return $request->file('file')->store('gallery', 'public');
+        }
+
+        if ($type === 'external_video') {
+            return $request->input('video_url');
+        }
+
+        return null;
     }
 }
