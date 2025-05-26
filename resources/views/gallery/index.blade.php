@@ -58,57 +58,54 @@
     </section>
 
     <!-- Gallery Items -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        @forelse($galleries as $item)
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden group dark:bg-gray-800">
-            @if($item->isPhoto() && $item->photo_url)
-                <div class="relative">
-                    <img src="{{ $item->photo_url }}"
+<section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    @forelse($galleries as $item)
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden dark:bg-gray-800">
+        @if($item->isPhoto() && $item->photo_url)
+            <a data-fancybox="gallery"
+               href="{{ $item->photo_url }}"
+               data-caption="{{ $item->title }} {{ $item->description }}">
+                <img src="{{ $item->photo_url }}"
+                     alt="{{ $item->title }}"
+                     class="w-full h-60 object-cover hover:opacity-80 transition" />
+            </a>
+        @elseif($item->isVideo() && $item->video_url)
+            @if($item->isLocalVideo())
+                <a data-fancybox="gallery"
+                   href="{{ $item->video_url }}"
+                   data-caption="{{ $item->title }} {{ $item->description }}"
+                   data-type="video">
+                    <video class="w-full h-60 object-cover" muted autoplay loop>
+                        <source src="{{ $item->video_url }}" type="video/mp4">
+                    </video>
+                </a>
+            @else
+                <a data-fancybox="gallery"
+                   data-type="iframe"
+                   data-src="{{ $item->video_url }}"
+                   href="javascript:;">
+                    <img src="https://img.youtube.com/vi/{{ getYoutubeId($item->video_url) }}/hqdefault.jpg"
                          alt="{{ $item->title }}"
-                         class="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-300">
-
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <button onclick="event.stopPropagation(); openLightbox('{{ $item->photo_url }}')"
-                                class="text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md font-medium transition">
-                            हेर्नुहोस्
-                        </button>
-                    </div>
-                </div>
-            @elseif($item->isVideo() && $item->video_url)
-                <div class="aspect-video">
-                    @if($item->isLocalVideo())
-                        <video controls class="w-full h-full rounded-t-md">
-                            <source src="{{ $item->video_url }}" type="video/mp4">
-                            तपाईको browser ले यो भिडियो support गर्दैन।
-                        </video>
-                    @else
-                        <iframe src="{{ $item->video_url }}"
-                                title="{{ $item->title }}"
-                                class="w-full h-full rounded-t-md"
-                                allowfullscreen></iframe>
-                    @endif
-                </div>
+                         class="w-full h-60 object-cover hover:opacity-80 transition" />
+                </a>
             @endif
+        @endif
 
-            <!-- Meta Info -->
-            <div class="p-3 border-t dark:border-gray-700">
-                @if($item->title)
-                    <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
-                @endif
-                @if($item->typeLabel)
-                    <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->typeLabel }}</p>
-                @endif
-                @if(!empty($item->description))
-                    <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
-                @endif
-            </div>
+        <div class="p-3 border-t dark:border-gray-700">
+            <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->typeLabel }}</p>
+            @if(!empty($item->description))
+                <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
+            @endif
         </div>
-        @empty
-        <div class="col-span-full text-center py-12">
-            <p class="text-lg text-gray-600 nepali-font">हाललाई कुनै ग्यालरी आइटम उपलब्ध छैन।</p>
-        </div>
-        @endforelse
-    </section>
+    </div>
+    @empty
+    <div class="col-span-full text-center py-12">
+        <p class="text-lg text-gray-600 nepali-font">हाललाई कुनै ग्यालरी आइटम उपलब्ध छैन।</p>
+    </div>
+    @endforelse
+</section>
+
 
     <!-- Pagination -->
     <div class="mt-10">
