@@ -62,7 +62,7 @@
                             <td>{{ $gallery->title }}</td>
                             <td>{{ $gallery->category_label }}</td>
                             <td>
-                                <span class="badge bg-{{ $gallery->type === 'photo' ? 'success' : 'primary' }}">
+                                <span class="badge bg-{{ $gallery->isPhoto() ? 'success' : ($gallery->isLocalVideo() ? 'info' : 'primary') }}">
                                     {{ $gallery->type_label }}
                                 </span>
                             </td>
@@ -70,7 +70,7 @@
                                 <form action="{{ route('admin.gallery.toggleStatus', $gallery) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm {{ $gallery->is_active ? 'btn-success' : 'btn-danger' }}">
-                                        {{ $gallery->is_active ? 'सक्रिय' : 'निष्क्रिय' }}
+                                        {{ $gallery->status_badge['text'] }}
                                     </button>
                                 </form>
                             </td>
@@ -104,23 +104,42 @@
         </div>
     </div>
 
-    <!-- Card View (Optional) -->
+    <!-- Card View -->
     <div class="tab-pane fade" id="cardView" role="tabpanel">
         <div class="row g-4">
             @forelse($galleries as $gallery)
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="card h-100">
-                        @if($gallery->type === 'photo')
-                            <img src="{{ $gallery->photo_url }}" class="card-img-top" alt="{{ $gallery->title }}" style="height: 200px; object-fit: cover;">
-                        @else
+                    <div class="card h-100 shadow-sm">
+                        @if($gallery->isPhoto() && $gallery->photo_url)
+                            <img src="{{ $gallery->photo_url }}"
+                                 class="card-img-top"
+                                 alt="{{ $gallery->title }}"
+                                 style="height: 200px; object-fit: cover;">
+                        @elseif($gallery->isVideo() && $gallery->video_url)
                             <div class="ratio ratio-16x9">
-                                <iframe src="{{ $gallery->video_url }}" title="{{ $gallery->title }}" allowfullscreen></iframe>
+                                @if($gallery->isLocalVideo())
+                                    <video controls class="w-100 h-100">
+                                        <source src="{{ $gallery->video_url }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                @else
+                                    <iframe src="{{ $gallery->video_url }}"
+                                            title="{{ $gallery->title }}"
+                                            allowfullscreen></iframe>
+                                @endif
+                            </div>
+                        @else
+                            <div class="d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">कुनै मिडिया छैन</span>
                             </div>
                         @endif
+
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title nepali-font">{{ $gallery->title }}</h5>
                             <p class="card-text nepali-font">
-                                <small class="text-muted">{{ $gallery->category_label }} | {{ $gallery->type_label }}</small>
+                                <small class="text-muted">
+                                    {{ $gallery->category_label }} | {{ $gallery->type_label }}
+                                </small>
                             </p>
                             <div class="mt-auto pt-3">
                                 <div class="d-flex justify-content-between">

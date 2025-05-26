@@ -173,12 +173,12 @@ class Gallery extends Model
     /**
      * Static method to get type options in Nepali
      */
-    public static function getTypeOptions()
-{
-    return [
-        'photo' => 'फोटो',
-        'video' => 'बाह्य भिडियो (YouTube)',
-        'local_video' => 'स्थानीय भिडियो' // ✅ थप्नुहोस्
-    ];
-}
+    public static function getTypeOptions(): array
+    {
+        return [
+            'photo' => 'फोटो',
+            'external_video' => 'बाह्य भिडियो (YouTube)',
+            'local_video' => 'स्थानीय भिडियो'
+        ];
+    }
 }

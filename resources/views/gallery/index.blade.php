@@ -18,27 +18,36 @@
         @if(isset($featuredItems) && $featuredItems->isNotEmpty())
             @foreach($featuredItems as $item)
                 <div class="relative overflow-hidden rounded-xl group shadow-md">
-                    @if($item->type === 'photo')
-                        <img src="{{ asset('storage/' . $item->image_path) }}"
+                    @if($item->isPhoto() && $item->photo_url)
+                        <img src="{{ $item->photo_url }}"
                              alt="{{ $item->title }}"
                              class="object-cover w-full h-80 group-hover:scale-110 transition-transform duration-500">
-                    @elseif($item->type === 'video')
-                        <video controls class="w-full h-80 group-hover:scale-110 transition-transform duration-500">
-                            <source src="{{ $item->video_url }}" type="video/mp4">
-                            तपाईको browser ले यो भिडियो support गर्दैन।
-                        </video>
-                    @elseif($item->type === 'external_video')
-                        <iframe src="{{ $item->video_url }}"
-                                title="{{ $item->title }}"
-                                class="w-full h-80 group-hover:scale-110 transition-transform duration-500"
-                                allowfullscreen></iframe>
+                    @elseif($item->isVideo() && $item->video_url)
+                        @if($item->isLocalVideo())
+                            <video controls class="w-full h-80 group-hover:scale-110 transition-transform duration-500">
+                                <source src="{{ $item->video_url }}" type="video/mp4">
+                                तपाईको browser ले यो भिडियो support गर्दैन।
+                            </video>
+                        @else
+                            <iframe src="{{ $item->video_url }}"
+                                    title="{{ $item->title }}"
+                                    class="w-full h-80 group-hover:scale-110 transition-transform duration-500"
+                                    allowfullscreen></iframe>
+                        @endif
                     @endif
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
-                        <div class="p-4 text-white">
-                            <h2 class="text-2xl font-bold">{{ $item->title }}</h2>
-                            <p class="text-sm mt-1 nepali-font">{{ $item->description }}</p>
+
+                    @if($item->title || $item->description)
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
+                            <div class="p-4 text-white">
+                                @if($item->title)
+                                    <h2 class="text-2xl font-bold">{{ $item->title }}</h2>
+                                @endif
+                                @if($item->description)
+                                    <p class="text-sm mt-1 nepali-font">{{ $item->description }}</p>
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             @endforeach
         @else
@@ -52,41 +61,45 @@
     <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @forelse($galleries as $item)
         <div class="bg-white rounded-lg shadow-sm overflow-hidden group dark:bg-gray-800">
-            @if($item->type === 'photo')
+            @if($item->isPhoto() && $item->photo_url)
                 <div class="relative">
-                    <img src="{{ asset('storage/' . $item->image_path) }}"
+                    <img src="{{ $item->photo_url }}"
                          alt="{{ $item->title }}"
                          class="w-full h-60 object-cover group-hover:scale-110 transition-transform duration-300">
 
                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <button onclick="openLightbox('{{ asset('storage/' . $item->image_path) }}')"
+                        <button onclick="event.stopPropagation(); openLightbox('{{ $item->photo_url }}')"
                                 class="text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md font-medium transition">
                             हेर्नुहोस्
                         </button>
                     </div>
                 </div>
-            @elseif($item->type === 'video')
+            @elseif($item->isVideo() && $item->video_url)
                 <div class="aspect-video">
-                    <video controls class="w-full h-full rounded-t-md">
-                        <source src="{{ $item->video_url }}" type="video/mp4">
-                        तपाईको browser ले यो भिडियो support गर्दैन।
-                    </video>
-                </div>
-            @elseif($item->type === 'external_video')
-                <div class="aspect-video">
-                    <iframe src="{{ $item->video_url }}"
-                            title="{{ $item->title }}"
-                            class="w-full h-full rounded-t-md"
-                            allowfullscreen></iframe>
+                    @if($item->isLocalVideo())
+                        <video controls class="w-full h-full rounded-t-md">
+                            <source src="{{ $item->video_url }}" type="video/mp4">
+                            तपाईको browser ले यो भिडियो support गर्दैन।
+                        </video>
+                    @else
+                        <iframe src="{{ $item->video_url }}"
+                                title="{{ $item->title }}"
+                                class="w-full h-full rounded-t-md"
+                                allowfullscreen></iframe>
+                    @endif
                 </div>
             @endif
 
             <!-- Meta Info -->
             <div class="p-3 border-t dark:border-gray-700">
-                <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->typeLabel }}</p>
+                @if($item->title)
+                    <p class="font-semibold text-lg text-gray-800 dark:text-gray-200 nepali-font">{{ $item->title }}</p>
+                @endif
+                @if($item->typeLabel)
+                    <p class="text-sm text-gray-500 dark:text-gray-400 nepali-font capitalize">{{ $item->typeLabel }}</p>
+                @endif
                 @if(!empty($item->description))
-                <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
+                    <p class="text-sm mt-1 text-gray-600 dark:text-gray-400 nepali-font">{{ $item->description }}</p>
                 @endif
             </div>
         </div>
@@ -106,9 +119,10 @@
     <div id="lightbox"
          class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4"
          onclick="closeLightbox()">
-        <div class="relative max-w-4xl w-full">
+        <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
             <img id="lightbox-img" src="" alt="Full Size Image" class="w-full h-auto rounded-lg shadow-lg">
-            <button class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition">
+            <button onclick="closeLightbox()"
+                    class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition">
                 ✕
             </button>
         </div>
@@ -132,7 +146,6 @@
         img.src = '';
     }
 
-    // Escape key handler
     document.addEventListener('keydown', function(e) {
         if (e.key === "Escape") {
             closeLightbox();
@@ -140,9 +153,9 @@
     });
 
     @if(session('success'))
-        window.addEventListener('DOMContentLoaded', () => {
-            alert("{{ session('success') }}");
-        });
+    window.addEventListener('DOMContentLoaded', () => {
+        alert("{{ session('success') }}");
+    });
     @endif
 </script>
 @endsection

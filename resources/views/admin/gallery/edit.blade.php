@@ -35,7 +35,8 @@
                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">-- छान्नुहोस् --</option>
                     <option value="photo" {{ old('type') == 'photo' ? 'selected' : '' }}>फोटो</option>
-                    <option value="video" {{ old('type') == 'video' ? 'selected' : '' }}>भिडियो</option>
+                    <option value="local_video" {{ old('type') == 'local_video' ? 'selected' : '' }}>स्थानीय भिडियो</option>
+                    <option value="external_video" {{ old('type') == 'external_video' ? 'selected' : '' }}>बाह्य भिडियो (YouTube)</option>
                 </select>
             </div>
 
@@ -47,10 +48,19 @@
                        class="mt-1 block w-full text-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200">
             </div>
 
-            <!-- Video URL -->
-            <div id="video-field" class="hidden">
-                <label for="video_url" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">YouTube भिडियो URL</label>
-                <input type="url" name="video_url" id="video_url" placeholder="https://www.youtube.com/watch?v=example"
+            <!-- Local Video Upload -->
+            <div id="local-video-field" class="hidden">
+                <label for="file" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">भिडियो अपलोड गर्नुहोस्</label>
+                <input type="file" name="file" id="file"
+                       accept="video/*"
+                       class="mt-1 block w-full text-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md p-2 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200">
+            </div>
+
+            <!-- External Video URL -->
+            <div id="external-video-field" class="hidden">
+                <label for="video_url" class="block font-medium text-gray-700 dark:text-gray-200 nepali-font">भिडियो URL</label>
+                <input type="url" name="video_url" id="video_url"
+                       placeholder="https://www.youtube.com/watch?v=example "
                        value="{{ old('video_url') }}"
                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
             </div>
@@ -71,13 +81,19 @@
 <script>
     function toggleFields() {
         const type = document.getElementById('type').value;
-        document.getElementById('photo-field').classList.add('hidden');
-        document.getElementById('video-field').classList.add('hidden');
 
+        // Hide all optional fields
+        document.getElementById('photo-field').classList.add('hidden');
+        document.getElementById('local-video-field').classList.add('hidden');
+        document.getElementById('external-video-field').classList.add('hidden');
+
+        // Show relevant field based on selection
         if (type === 'photo') {
             document.getElementById('photo-field').classList.remove('hidden');
-        } else if (type === 'video') {
-            document.getElementById('video-field').classList.remove('hidden');
+        } else if (type === 'local_video') {
+            document.getElementById('local-video-field').classList.remove('hidden');
+        } else if (type === 'external_video') {
+            document.getElementById('external-video-field').classList.remove('hidden');
         }
     }
 

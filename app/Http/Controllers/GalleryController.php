@@ -164,7 +164,7 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
-        if ($gallery->isPhoto() || $gallery->isLocalVideo()) {
+        if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
             Storage::disk('public')->delete($gallery->image_path);
         }
 
