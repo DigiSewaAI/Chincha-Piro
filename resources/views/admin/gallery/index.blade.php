@@ -1,9 +1,12 @@
 @extends('layouts.admin')
-
 @section('content')
 <div class="container-fluid px-4 py-5">
-    <h1 class="text-3xl font-bold mb-6 nepali-font">ग्यालरी प्रबन्धन</h1>
-
+    <div class="d-flex justify-content-between align-items-center mb-6">
+        <h1 class="text-3xl font-bold nepali-font">ग्यालरी प्रबन्धन</h1>
+        <a href="{{ route('admin.gallery.create') }}" class="btn btn-success btn-lg">
+            <i class="bi bi-plus-circle me-2"></i>नयाँ आइटम थप्नुहोस्
+        </a>
+    </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
@@ -45,7 +48,7 @@
     <!-- Table View -->
     <div class="tab-pane fade show active" id="tableView" role="tabpanel">
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped table-hover align-middle">
                 <thead class="table-dark">
                     <tr>
                         <th>शीर्षक</th>
@@ -69,7 +72,7 @@
                             <td>
                                 <form action="{{ route('admin.gallery.toggleStatus', $gallery) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm {{ $gallery->is_active ? 'btn-success' : 'btn-danger' }}">
+                                    <button type="submit" class="btn btn-sm {{ $gallery->is_active ? 'btn-success' : 'btn-danger' }}" title="स्टेटस परिवर्तन गर्नुहोस्">
                                         {{ $gallery->status_badge['text'] }}
                                     </button>
                                 </form>
@@ -77,27 +80,30 @@
                             <td>
                                 <form action="{{ route('admin.gallery.markFeatured', $gallery) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm {{ $gallery->featured ? 'btn-warning' : 'btn-secondary' }}">
+                                    <button type="submit" class="btn btn-sm {{ $gallery->featured ? 'btn-warning' : 'btn-secondary' }}" title="फिचर्ड स्थिति परिवर्तन गर्नुहोस्">
                                         {{ $gallery->featured ? 'फीचर्ड' : 'फीचर गर्नुहोस्' }}
                                     </button>
                                 </form>
                             </td>
                             <td>
-                                <a href="{{ route('admin.gallery.edit', $gallery) }}" class="btn btn-sm btn-primary me-1">सम्पादन</a>
+                                <a href="{{ route('admin.gallery.edit', $gallery) }}" class="btn btn-sm btn-primary me-1" title="सम्पादन गर्नुहोस्">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
                                 <form action="{{ route('admin.gallery.destroy', $gallery) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('हटाउने कि सुनिश्चित गर्नुहोस्?')">हटाउनुहोस्</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('हटाउने कि सुनिश्चित गर्नुहोस्?')" title="हटाउनुहोस्">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-center">ग्यालरीमा कुनै आइटम छैन</td></tr>
+                        <tr><td colspan="6" class="text-center py-4">ग्यालरीमा कुनै आइटम छैन</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
         <!-- Pagination -->
         <div class="d-flex justify-content-center mt-4">
             {{ $galleries->appends(request()->query())->links() }}
@@ -109,53 +115,48 @@
         <div class="row g-4">
             @forelse($galleries as $gallery)
                 <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="card h-100 shadow-sm">
-                        @if($gallery->isPhoto() && $gallery->photo_url)
-                            <img src="{{ $gallery->photo_url }}"
-                                 class="card-img-top"
-                                 alt="{{ $gallery->title }}"
-                                 style="height: 200px; object-fit: cover;">
-                        @elseif($gallery->isVideo() && $gallery->video_url)
-                            <div class="ratio ratio-16x9">
-                                @if($gallery->isLocalVideo())
-                                    <video controls class="w-100 h-100">
+                    <div class="card h-100 shadow-sm border-0 hover-shadow">
+                        <!-- Media Preview -->
+                        <div class="position-relative overflow-hidden" style="height: 200px;">
+                            @if($gallery->isPhoto() && $gallery->photo_url)
+                                <img src="{{ $gallery->photo_url }}" class="card-img-top object-fit-cover w-100 h-100" alt="{{ $gallery->title }}">
+                            @elseif($gallery->isLocalVideo() && $gallery->video_url)
+                                <div class="ratio ratio-16x9">
+                                    <video controls class="w-100 h-100" style="object-fit: cover;">
                                         <source src="{{ $gallery->video_url }}" type="video/mp4">
-                                        Your browser does not support the video tag.
+                                        तपाईको ब्राउजरले यो भिडियो समर्थन गर्दैन।
                                     </video>
-                                @else
-                                    <iframe src="{{ $gallery->video_url }}"
-                                            title="{{ $gallery->title }}"
-                                            allowfullscreen></iframe>
-                                @endif
-                            </div>
-                        @else
-                            <div class="d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <span class="text-muted">कुनै मिडिया छैन</span>
-                            </div>
-                        @endif
-
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title nepali-font">{{ $gallery->title }}</h5>
-                            <p class="card-text nepali-font">
-                                <small class="text-muted">
-                                    {{ $gallery->category_label }} | {{ $gallery->type_label }}
-                                </small>
-                            </p>
-                            <div class="mt-auto pt-3">
-                                <div class="d-flex justify-content-between">
-                                    <form action="{{ route('admin.gallery.toggleStatus', $gallery) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm {{ $gallery->is_active ? 'btn-success' : 'btn-danger' }}">
-                                            {{ $gallery->is_active ? 'सक्रिय' : 'निष्क्रिय' }}
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('admin.gallery.markFeatured', $gallery) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm {{ $gallery->featured ? 'btn-warning' : 'btn-secondary' }}">
-                                            {{ $gallery->featured ? 'फीचर्ड' : 'फीचर गर्नुहोस्' }}
-                                        </button>
-                                    </form>
                                 </div>
+                            @elseif($gallery->isExternalVideo() && $gallery->video_embed_url)
+                                <div class="ratio ratio-16x9">
+                                    <iframe src="{{ $gallery->video_embed_url }}" title="{{ $gallery->title }}" allowfullscreen></iframe>
+                                </div>
+                            @else
+                                <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+                                    <span class="text-muted">कुनै मिडिया छैन</span>
+                                </div>
+                            @endif
+                        </div>
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column p-3">
+                            <h5 class="card-title nepali-font mb-1">{{ $gallery->title }}</h5>
+                            <small class="text-muted mb-2">
+                                {{ $gallery->category_label }} | {{ $gallery->type_label }}
+                            </small>
+                            <!-- Status & Actions -->
+                            <div class="mt-auto pt-2 d-flex justify-content-between">
+                                <form action="{{ route('admin.gallery.toggleStatus', $gallery) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm {{ $gallery->is_active ? 'btn-success' : 'btn-danger' }}" title="स्टेटस परिवर्तन गर्नुहोस्">
+                                        {{ $gallery->is_active ? 'सक्रिय' : 'निष्क्रिय' }}
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.gallery.markFeatured', $gallery) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm {{ $gallery->featured ? 'btn-warning' : 'btn-secondary' }}" title="फिचर्ड स्थिति परिवर्तन गर्नुहोस्">
+                                        {{ $gallery->featured ? 'फीचर्ड' : 'फीचर गर्नुहोस्' }}
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -168,4 +169,14 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Bootstrap 5 tab support
+    const tabTrigger = new bootstrap.Tab(document.querySelector('#viewTypeTab .nav-link.active'));
+    tabTrigger.show();
+});
+</script>
 @endsection

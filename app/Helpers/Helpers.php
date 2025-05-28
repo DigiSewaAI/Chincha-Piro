@@ -3,9 +3,8 @@
 namespace App\Helpers;
 
 if (!function_exists('getYoutubeId')) {
-    function getYoutubeId($url)
-    {
-        $pattern = '/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([^\s&]+)/';
+    function getYoutubeId(string $url): ?string {
+        $pattern = '%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i';
         preg_match($pattern, $url, $matches);
         return $matches[1] ?? null;
     }

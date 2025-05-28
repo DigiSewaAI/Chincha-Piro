@@ -31,8 +31,7 @@
                 <!-- Title -->
                 <div class="col-md-6">
                     <label class="form-label nepali-font">शीर्षक</label>
-                    <input type="text" name="title" class="form-control"
-                           value="{{ old('title', $gallery->title ?? '') }}" required>
+                    <input type="text" name="title" class="form-control" value="{{ old('title', $gallery->title ?? '') }}" required>
                 </div>
 
                 <!-- Category -->
@@ -99,7 +98,7 @@
                     <label class="form-label nepali-font">भिडियो URL</label>
                     <input type="url" name="video_url" id="videoUrlInput" class="form-control"
                            placeholder="उदाहरण: https://youtu.be/xxxxxxx "
-                           value="{{ old('video_url', $gallery?->type == 'external_video' ? $gallery->image_path : '') }}">
+                           value="{{ old('video_url', $gallery?->type == 'external_video' ? $gallery->video_url : '') }}">
                 </div>
 
                 <!-- Description -->

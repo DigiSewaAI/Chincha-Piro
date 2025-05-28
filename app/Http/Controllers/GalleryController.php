@@ -79,15 +79,24 @@ class GalleryController extends Controller
         $validated = $this->validateGallery($request);
         $path = $this->handleFileUpload($request);
 
-        Gallery::create([
+        // Determine which column to use based on type
+        $data = [
             'title' => $validated['title'],
             'category' => $validated['category'],
             'description' => $validated['description'] ?? null,
             'type' => $validated['type'],
-            'image_path' => $path,
             'is_active' => $validated['is_active'],
             'featured' => $validated['featured'],
-        ]);
+        ];
+
+        // Assign to correct column
+        if (in_array($validated['type'], ['photo', 'local_video'])) {
+            $data['image_path'] = $path;
+        } elseif ($validated['type'] === 'external_video') {
+            $data['video_url'] = $path;
+        }
+
+        Gallery::create($data);
 
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक थपियो।');
     }
@@ -114,10 +123,19 @@ class GalleryController extends Controller
         ];
 
         if ($newPath !== null) {
+            // Delete old file if it's a photo or local video
             if ($gallery->isPhoto() || $gallery->isLocalVideo()) {
                 Storage::disk('public')->delete($gallery->image_path);
             }
-            $data['image_path'] = $newPath;
+
+            // Assign new value to correct column
+            if (in_array($validated['type'], ['photo', 'local_video'])) {
+                $data['image_path'] = $newPath;
+                $data['video_url'] = null; // Clear video URL if exists
+            } elseif ($validated['type'] === 'external_video') {
+                $data['video_url'] = $newPath;
+                $data['image_path'] = null; // Clear image path if exists
+            }
         }
 
         $gallery->update($data);
@@ -164,6 +182,7 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
+        // Delete file if it's a photo or local video
         if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
             Storage::disk('public')->delete($gallery->image_path);
         }
