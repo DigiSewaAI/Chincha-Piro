@@ -18,7 +18,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Public gallery view
+     * सार्वजनिक ग्यालरी हेर्ने view
      */
     public function publicIndex()
     {
@@ -27,7 +27,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Admin gallery management view
+     * एडमिनको लागि ग्यालरी व्यवस्थापन view
      */
     public function index()
     {
@@ -36,7 +36,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Show upload form for admin
+     * नयाँ आइटम अपलोड फारम
      */
     public function create()
     {
@@ -52,7 +52,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Show edit form for admin
+     * आइटम सम्पादन फारम
      */
     public function edit(Gallery $gallery)
     {
@@ -68,7 +68,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Store new image/video
+     * नयाँ फोटो / भिडियो save गर्ने
      */
     public function store(Request $request)
     {
@@ -79,7 +79,6 @@ class GalleryController extends Controller
         $validated = $this->validateGallery($request);
         $path = $this->handleFileUpload($request);
 
-        // Determine which column to use based on type
         $data = [
             'title' => $validated['title'],
             'category' => $validated['category'],
@@ -89,7 +88,6 @@ class GalleryController extends Controller
             'featured' => $validated['featured'],
         ];
 
-        // Assign to correct column
         if (in_array($validated['type'], ['photo', 'local_video'])) {
             $data['image_path'] = $path;
         } elseif ($validated['type'] === 'external_video') {
@@ -102,7 +100,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Update existing gallery item
+     * पुरानो आइटम update गर्ने
      */
     public function update(Request $request, Gallery $gallery)
     {
@@ -123,18 +121,16 @@ class GalleryController extends Controller
         ];
 
         if ($newPath !== null) {
-            // Delete old file if it's a photo or local video
-            if ($gallery->isPhoto() || $gallery->isLocalVideo()) {
+            if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
                 Storage::disk('public')->delete($gallery->image_path);
             }
 
-            // Assign new value to correct column
             if (in_array($validated['type'], ['photo', 'local_video'])) {
                 $data['image_path'] = $newPath;
-                $data['video_url'] = null; // Clear video URL if exists
+                $data['video_url'] = null;
             } elseif ($validated['type'] === 'external_video') {
                 $data['video_url'] = $newPath;
-                $data['image_path'] = null; // Clear image path if exists
+                $data['image_path'] = null;
             }
         }
 
@@ -143,7 +139,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Toggle gallery item status
+     * आइटमको सक्रियता टगल गर्ने
      */
     public function toggleStatus(Gallery $gallery)
     {
@@ -156,7 +152,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Mark gallery item as featured
+     * आइटमलाई Featured बनाउने
      */
     public function markFeatured(Gallery $gallery)
     {
@@ -174,7 +170,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Delete gallery item
+     * ग्यालरी आइटम मेटाउने
      */
     public function destroy(Gallery $gallery)
     {
@@ -182,7 +178,6 @@ class GalleryController extends Controller
             return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
         }
 
-        // Delete file if it's a photo or local video
         if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
             Storage::disk('public')->delete($gallery->image_path);
         }
@@ -193,7 +188,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Validate gallery form data
+     * Validate gallery input
      */
     private function validateGallery(Request $request, Gallery $gallery = null): array
     {
@@ -220,7 +215,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * Handle file upload or external video URL
+     * File upload or video URL handling
      */
     private function handleFileUpload(Request $request): ?string
     {

@@ -3,24 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 📦 Nunito Font Definitions (from fonts.bunny.net) */
-@font-face {
-    font-family: 'Nunito';
-    font-style: normal;
-    font-weight: 400;
-    font-stretch: 100%;
-    src: url('https://fonts.bunny.net/nunito/files/nunito-latin-400-normal.woff2 ') format('woff2'),
-         url('https://fonts.bunny.net/nunito/files/nunito-latin-400-normal.woff ') format('woff');
-    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-}
-
-/* 🧭 Global Typography */
+/* 📦 Nunito Sans Font Definitions (via Google Fonts) */
 @layer base {
     html {
         font-family: 'Nunito', sans-serif;
         @apply text-[16px] md:text-[18px];
     }
+}
 
+/* 🧭 Global Typography */
+@layer base {
     body {
         font-family: 'Preeti', 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
         font-size: 16px;
@@ -28,7 +20,12 @@
         @apply bg-slate-50 text-slate-800 dark:bg-gray-900 dark:text-gray-100;
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         @apply font-bold tracking-tight;
     }
 }
@@ -44,23 +41,23 @@
     unicode-range: U+0900-097F; /* Devanagari (Nepali) */
 }
 
-/* 🧱 Bootstrap SCSS Imports */
-@import 'bootstrap/scss/functions';
-@import 'variables'; /* Custom variables file */
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
-@import 'bootstrap/scss/root';
-@import 'bootstrap/scss/reboot';
-@import 'bootstrap/scss/type';
-@import 'bootstrap/scss/images';
-@import 'bootstrap/scss/containers';
-@import 'bootstrap/scss/grid';
+/* 🧱 Bootstrap Core Styles (Minimal Import for Grid Only) */
+@import "bootstrap/scss/functions";
+@import "variables"; /* Custom variables file */
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/grid";
 
 /* 📦 Bootstrap Custom Overrides */
 .card {
     @extend .rounded-lg;
     border-radius: 15px !important;
 }
+
 .bg-primary {
     background-color: #2c3e50 !important;
 }
@@ -80,11 +77,6 @@
 
 .btn-secondary {
     @apply bg-gray-200 hover:bg-gray-300 text-gray-800;
-}
-
-/* 🔄 Transition Utilities */
-.transition-transform {
-    @apply transition-transform duration-300 ease-in-out;
 }
 
 /* ✅ Sidebar Link Component */
