@@ -2,32 +2,129 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Menu;
+use App\Models\Category;
 use Illuminate\Http\Request;
-use App\Models\Menu; // ✅ Model Import (Fix 1)
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MenuController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource (Admin view).
      */
     public function index()
     {
-        // ✅ Pagination थपिएको (Blade मा $dishes->links() प्रयोग गर्नुहोस्)
-        $dishes = Menu::paginate(10); // $menuItems सट्टा $dishes प्रयोग (Fix 2)
-
-        // ✅ Blade Template Path सही गरिएको (resources/views/menu/index.blade.php)
-        return view('menu.index', compact('dishes')); // 'menuItems' सट्टा 'dishes' (Fix 3)
+        $menus = Menu::with('category')->latest()->paginate(15);
+        return view('admin.menu.index', compact('menus'));
     }
 
     /**
-     * Display the specified resource.
+     * Show the form for creating a new menu.
      */
-    public function show($id)
+    public function create()
     {
-        // ✅ 404 Error Handling (Item नभेटिएमा)
-        $item = Menu::findOrFail($id); // $menuItem सट्टा $item (Fix 4)
+        $categories = Category::all();
+        return view('admin.menu.create', compact('categories'));
+    }
 
-        // ✅ Show Page Render गर्ने
-        return view('menu.show', compact('item')); // Blade: resources/views/menu/show.blade.php
+    /**
+     * Store a newly created menu in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'description' => 'nullable|string',
+        ]);
+
+        $validated['is_featured'] = $request->has('is_featured');
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $cleanedName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME));
+            $imageName = $cleanedName . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $validated['image'] = $image->storeAs('menu_images', $imageName, 'public');
+        }
+
+        Menu::create($validated);
+
+        return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक थपियो!');
+    }
+
+    /**
+     * Display the specified menu (Public detail view).
+     */
+    public function show(Menu $menu)
+    {
+        return view('menu.show', compact('menu'));
+    }
+
+    /**
+     * Show the form for editing the specified menu.
+     */
+    public function edit(Menu $menu)
+    {
+        $categories = Category::all();
+        return view('admin.menu.edit', compact('menu', 'categories'));
+    }
+
+    /**
+     * Update the specified menu in storage.
+     */
+    public function update(Request $request, Menu $menu)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'description' => 'nullable|string',
+        ]);
+
+        $validated['is_featured'] = $request->has('is_featured');
+
+        if ($request->hasFile('image')) {
+            if ($menu->image && Storage::disk('public')->exists($menu->image)) {
+                Storage::disk('public')->delete($menu->image);
+            }
+
+            $image = $request->file('image');
+            $cleanedName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME));
+            $imageName = $cleanedName . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $validated['image'] = $image->storeAs('menu_images', $imageName, 'public');
+        }
+
+        $menu->update($validated);
+
+        return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक अपडेट भयो!');
+    }
+
+    /**
+     * Remove the specified menu from storage.
+     */
+    public function destroy(Menu $menu)
+    {
+        if ($menu->image && Storage::disk('public')->exists($menu->image)) {
+            Storage::disk('public')->delete($menu->image);
+        }
+
+        $menu->delete();
+
+        return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक मेटियो!');
+    }
+
+    /**
+     * Public Menu View (menu listing).
+     */
+    public function publicMenu()
+    {
+        $menus = Menu::with('category')->paginate(12);
+        $categories = Category::all();
+
+        return view('menu.index', compact('menus', 'categories'));
     }
 }

@@ -1,15 +1,14 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Filesystem Disk
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the default filesystem disk that should be used
-    | by the framework. The "local" disk, as well as a variety of cloud
-    | based disks are available to your application. Just store away!
+    | यहाँ तपाईंले फ्रेमवर्क द्वारा प्रयोग गर्नुपर्ने डिफल्ट फाइलसिस्टम डिस्क निर्दिष्ट गर्न सक्नुहुन्छ।
+    | "local" डिस्कका साथै क्लाउड आधारित डिस्कहरू पनि तपाईंको एप्लिकेशनका लागि उपलब्ध छन्।
+    | सामान्यतया "local" डिफल्टका लागि प्रयोग गरिन्छ।
     |
     */
 
@@ -20,28 +19,26 @@ return [
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
-    | Here you may configure as many filesystem "disks" as you wish, and you
-    | may even configure multiple disks of the same driver. Defaults have
-    | been set up for each driver as an example of the required values.
-    |
-    | Supported Drivers: "local", "ftp", "sftp", "s3"
+    | यहाँ तपाईंले जति सकेसम्म फाइलसिस्टम "डिस्कहरू" कन्फिगर गर्न सक्नुहुन्छ,
+    | र तपाईंले समान ड्राइभरको धेरै डिस्कहरू पनि कन्फिगर गर्न सक्नुहुन्छ।
+    | समर्थित ड्राइभरहरू: "local", "ftp", "sftp", "s3"
     |
     */
 
     'disks' => [
-
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app'),
             'throw' => false,
         ],
 
+        // ✅ public डिस्कको सही सेटिङहरू
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'/storage',
-            'visibility' => 'public',
-            'throw' => false,
+            'root' => storage_path('app/public'), // ✅ सही root path
+            'url' => env('APP_URL') . '/storage', // ✅ APP_URL बाट URL जनरेट गर्ने
+            'visibility' => 'public', // ✅ public फाइलहरूको visibility
+            'throw' => false, // ✅ error throw नगर्ने
         ],
 
         's3' => [
@@ -55,7 +52,6 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ],
-
     ],
 
     /*
@@ -63,14 +59,13 @@ return [
     | Symbolic Links
     |--------------------------------------------------------------------------
     |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
+    | यहाँ तपाईंले सिम्बोलिक लिङ्कहरू कन्फिगर गर्न सक्नुहुन्छ जुन `storage:link` Artisan कमान्ड
+    | प्रयोग गर्दा सिर्जना हुन्छन्। एर्रे कीहरू लिङ्कहरूको स्थान हुन् र मानहरू उनीहरूको लक्ष्य हुन्।
     |
     */
 
     'links' => [
+        // ✅ public/storage → storage/app/public
         public_path('storage') => storage_path('app/public'),
     ],
-
 ];

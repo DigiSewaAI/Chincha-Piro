@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Dish;
+use App\Models\Menu; // ✅ Dish → Menu
 use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\StatusHistory;
@@ -20,24 +20,24 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $categories = Category::with(['dishes' => function ($query) {
+        $categories = Category::with(['menus' => function ($query) { // ✅ dishes → menus
             $query->where('is_available', true)->orderBy('name_nepali');
         }])->get();
 
-        $dishes = Dish::where('is_available', true)->get();
+        $menus = Menu::where('is_available', true)->get(); // ✅ dishes → menus
 
         $orders = Auth::user()->orders()
-            ->with(['items.dish', 'statusHistories'])
+            ->with(['items.menu', 'statusHistories']) // ✅ items.dish → items.menu
             ->latest()
             ->paginate(10);
 
-        return view('orders.index', compact('categories', 'orders', 'dishes'));
+        return view('orders.index', compact('categories', 'orders', 'menus')); // ✅ dishes → menus
     }
 
     public function publicIndex()
     {
         $orders = Order::publicOrders()
-            ->with(['items.dish'])
+            ->with(['items.menu']) // ✅ items.dish → items.menu
             ->latest()
             ->paginate(10);
 
@@ -46,7 +46,7 @@ class OrderController extends Controller
 
     public function create()
     {
-        $categories = Category::withAvailableDishes();
+        $categories = Category::withAvailableMenus(); // ✅ withAvailableDishes → withAvailableMenus
         return view('orders.create', compact('categories'));
     }
 
@@ -85,7 +85,7 @@ class OrderController extends Controller
             ->get();
 
         return view('orders.track', [
-            'order' => $order->load('items.dish'),
+            'order' => $order->load('items.menu'), // ✅ items.dish → items.menu
             'statusHistory' => $statusHistory
         ]);
     }
@@ -134,7 +134,7 @@ class OrderController extends Controller
     {
         return Validator::make($request->all(), [
             'items' => ['required', 'array', 'min:1', new ValidOrderItems],
-            'items.*.dish_id' => 'required|exists:dishes,id',
+            'items.*.menu_id' => 'required|exists:menus,id', // ✅ dish_id → menu_id
             'items.*.quantity' => 'required|integer|between:1,10',
             'items.*.note' => 'nullable|string|max:255',
             'customer_name' => [
@@ -157,17 +157,17 @@ class OrderController extends Controller
     private function createOrder(array $validated): Order
     {
         $user = Auth::user();
-        $dishes = Dish::whereIn('id', collect($validated['items'])->pluck('dish_id'))
+        $menus = Menu::whereIn('id', collect($validated['items'])->pluck('menu_id')) // ✅ dish_id → menu_id
             ->available()
             ->get()
             ->keyBy('id');
 
-        if ($dishes->count() !== count($validated['items'])) {
+        if ($menus->count() !== count($validated['items'])) {
             throw new \Exception('केही वस्तुहरू उपलब्ध छैनन्');
         }
 
         $order = $user->orders()->create([
-            'total_price' => $this->calculateTotal($validated['items'], $dishes),
+            'total_price' => $this->calculateTotal($validated['items'], $menus),
             'customer_name' => $validated['customer_name'] ?? $user->name,
             'phone' => $validated['phone'],
             'address' => $validated['address'],
@@ -177,28 +177,28 @@ class OrderController extends Controller
             'status' => 'pending'
         ]);
 
-        $this->createOrderItems($order, $validated['items'], $dishes);
+        $this->createOrderItems($order, $validated['items'], $menus);
         $this->notifyOrderCreation($order);
 
         return $order;
     }
 
-    private function calculateTotal(array $items, $dishes): float
+    private function calculateTotal(array $items, $menus): float
     {
         return collect($items)->sum(fn($item) =>
-            $dishes[$item['dish_id']]->price * $item['quantity']
+            $menus[$item['menu_id']]->price * $item['quantity'] // ✅ dish_id → menu_id
         );
     }
 
-    private function createOrderItems(Order $order, array $items, $dishes): void
+    private function createOrderItems(Order $order, array $items, $menus): void
     {
         foreach ($items as $item) {
-            $dish = $dishes[$item['dish_id']];
+            $menu = $menus[$item['menu_id']]; // ✅ dish_id → menu_id
             $order->items()->create([
-                'dish_id' => $dish->id,
+                'menu_id' => $menu->id, // ✅ dish_id → menu_id
                 'quantity' => $item['quantity'],
-                'price' => $dish->price,
-                'total' => $dish->price * $item['quantity'],
+                'price' => $menu->price, // ✅ dish → menu
+                'total' => $menu->price * $item['quantity'], // ✅ dish → menu
                 'note' => $item['note']
             ]);
         }

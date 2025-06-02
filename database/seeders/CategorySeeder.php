@@ -12,10 +12,12 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        // ✅ आवश्यकता अनुसार सही क्याटेगरी थपिएको
         $categories = [
-            ['name' => 'नेपाली व्यञ्जन', 'description' => 'परम्परागत नेपाली खाना'],
-            ['name' => 'चिनियाँ व्यञ्जन', 'description' => 'चिनियाँ स्वाद'],
-            ['name' => 'फास्ट फूड', 'description' => 'अन्तर्राष्ट्रिय फास्ट फूड']
+            ['name' => 'खाना', 'description' => 'परम्परागत नेपाली खाना'],
+            ['name' => 'नास्ता', 'description' => 'आहारका लागि हल्का नास्ता'],
+            ['name' => 'मिठाई', 'description' => 'घरेलु र पारम्परिक मिठाईहरू'],
+            ['name' => 'पेय', 'description' => 'स्वादिष्ट पेय वस्तुहरू']
         ];
 
         foreach ($categories as $category) {

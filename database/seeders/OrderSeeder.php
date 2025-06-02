@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Order;
 use App\Models\User;
-use App\Models\Dish;
+use App\Models\Menu; // ✅ Dish → Menu
 
 class OrderSeeder extends Seeder
 {
@@ -25,26 +25,26 @@ class OrderSeeder extends Seeder
             ]
         );
 
-        // 2. Dish नभएमा रोक्ने
-        if (Dish::count() === 0) {
-            $this->command->error('❌ पहिले Dish सिड गर्नुहोस्!');
+        // 2. Menu नभएमा रोक्ने
+        if (Menu::count() === 0) {
+            $this->command->error('❌ पहिले Menu सिड गर्नुहोस्!');
             return;
         }
 
         // 3. 20 ओटा ऑर्डर क्रिएट गर्ने
         Order::factory(20)->create(['user_id' => $user->id])
             ->each(function ($order) {
-                // 4. 1-5 ओटा खाना छान्ने
-                $dishes = Dish::inRandomOrder()->take(rand(1, 5))->get();
+                // 4. 1-5 ओटा मेनु छान्ने
+                $menus = Menu::inRandomOrder()->take(rand(1, 5))->get();
                 $totalPrice = 0; // total_price को लागि variable
 
-                // 5. प्रत्येक खानालाई जोड्ने
-                foreach ($dishes as $dish) {
+                // 5. प्रत्येक मेनुलाई जोड्ने
+                foreach ($menus as $menu) {
                     $quantity = rand(1, 3);
-                    $unitPrice = $dish->price;
+                    $unitPrice = $menu->price;
                     $itemTotal = $unitPrice * $quantity;
 
-                    $order->dishes()->attach($dish->id, [
+                    $order->menus()->attach($menu->id, [
                         'quantity' => $quantity,
                         'unit_price' => $unitPrice,   // ✅ price को सट्टा unit_price प्रयोग गरिएको
                         'total_price' => $itemTotal,  // ✅ pivot table मा total_price प्रयोग गरिएको

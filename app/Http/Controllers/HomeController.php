@@ -3,97 +3,86 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Dish;
+use App\Models\Menu;
+use App\Models\Category;
 
 class HomeController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
+    // Constructor
     public function __construct()
     {
-        // No middleware — Home page is public
+        //
     }
 
-    /**
-     * Show the application home page with dynamic dishes from the database.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
+    // होमपेज (Featured Dishes र Random Dishes)
     public function index()
     {
-        // 1. सबै डिशहरू DB बाट लोड (single-image field प्रयोग)
-        $dishes = Dish::all();
+        $featuredMenus = Menu::where('is_featured', true)->take(6)->get();
+        $dishes = Menu::inRandomOrder()->take(6)->get();
 
-        // 2. View मा पठाउनुहोस्
-        return view('home', compact('dishes'));
+        return view('home', compact('featuredMenus', 'dishes'));
     }
 
-    /**
-     * Show a specific dish in detail.
-     *
-     * @param  \App\Models\Dish  $dish
-     * @return \Illuminate\Contracts\Support\Renderable
-     */
-    public function show(Dish $dish)
+    // सम्पूर्ण मेनु देखाउने
+    public function menuIndex()
     {
-        return view('dishes.show', compact('dish'));
+        $menus = Menu::with('category')->latest()->paginate(12); // Menus with category
+        $categories = Category::all(); // ✅ Fixed: यो लाइन थपिएको छ
+
+        return view('menu.index', compact('menus', 'categories'));
     }
 
-    /**
-     * Store a new dish via form submission.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    // डिश विवरण
+    public function show(Menu $menu)
+    {
+        return view('menu.show', compact('menu'));
+    }
+
+    // नयाँ डिश स्टोर गर्ने
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image'       => 'required|string|max:255', // filename only, e.g. "dish1.jpg"
+            'image' => 'required|string|max:255',
+            'is_featured' => 'nullable|boolean',
+            'category_id' => 'required|exists:categories,id',
         ]);
 
-        Dish::create($validated);
+        $validated['is_featured'] = $request->has('is_featured');
+
+        Menu::create($validated);
 
         return back()->with('success', 'डिश सफलतापूर्वक थपियो!');
     }
 
-    /**
-     * Update an existing dish.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Dish  $dish
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, Dish $dish)
+    // डिश अपडेट गर्ने
+    public function update(Request $request, Menu $menu)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image'       => 'required|string|max:255',
+            'image' => 'required|string|max:255',
+            'is_featured' => 'nullable|boolean',
+            'category_id' => 'required|exists:categories,id',
         ]);
 
-        $dish->update($validated);
+        $validated['is_featured'] = $request->has('is_featured');
+
+        $menu->update($validated);
 
         return back()->with('success', 'डिश अपडेट भयो!');
     }
 
-    /**
-     * Delete a dish.
-     *
-     * @param  \App\Models\Dish  $dish
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Dish $dish)
+    // डिश मेटाउने
+    public function destroy(Menu $menu)
     {
-        $dish->delete();
+        $menu->delete();
+
         return back()->with('success', 'डिश हटाइयो!');
     }
 }

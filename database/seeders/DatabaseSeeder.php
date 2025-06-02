@@ -3,24 +3,42 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * डेटाबेसको लागि डमी डाटा सिड गर्नुहोस्
+     * Run the database seeds.
      */
     public function run(): void
     {
-        // १. पहिलो चरण: प्रयोगकर्ता सिड गर्ने (अर्डरहरूले user_id आवश्यक पर्छ)
+        // Foreign Key Constraints हटाउने
+        Schema::disableForeignKeyConstraints();
+
+        // पुराना डाटा मेटाउने (dishes हटाएर menus प्रयोग गरिएको)
+        DB::table('users')->truncate();
+        DB::table('categories')->truncate();
+        DB::table('menus')->truncate();  // dishes → menus
+        DB::table('orders')->truncate();
+        DB::table('roles')->truncate();
+        DB::table('permissions')->truncate();
+        DB::table('role_has_permissions')->truncate();
+        DB::table('model_has_roles')->truncate();
+
+        // Foreign Key Constraints पुनः सक्रिय गर्ने
+        Schema::enableForeignKeyConstraints();
+
+        // १. पहिलो चरण: प्रयोगकर्ता सिड गर्ने
         $this->call(UserSeeder::class);
 
-        // २. दोस्रो चरण: श्रेणीहरू सिड गर्ने (खानाका आइटमहरूले category_id आवश्यक पर्छ)
+        // २. दोस्रो चरण: श्रेणीहरू सिड गर्ने
         $this->call(CategorySeeder::class);
 
-        // ३. तेस्रो चरण: खानाका आइटमहरू सिड गर्ने
-        $this->call(DishSeeder::class);
+        // ३. तेस्रो चरण: मेनु आइटमहरू सिड गर्ने (DishSeeder हटाएर MenuSeeder प्रयोग)
+        $this->call(MenusTableSeeder::class);  // DishSeeder → MenusTableSeeder
 
-        // ४. चौथो चरण: अर्डरहरू सिड गर्ने (user_id र dish_id वैध हुनु पर्छ)
+        // ४. चौथो चरण: अर्डरहरू सिड गर्ने
         $this->call(OrderSeeder::class);
 
         // ५. पाँचौं चरण: भूमिका र अनुमतिहरू सेटअप गर्ने

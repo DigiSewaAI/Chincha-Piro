@@ -9,41 +9,18 @@ return new class extends Migration {
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-
-            // User सम्बन्ध (गेस्ट अर्डरका लागि nullable)
-            $table->foreignId('user_id')
-                ->nullable()
-                ->constrained()
-                ->onDelete('set null');
-
-            // ग्राहक जानकारी
-            $table->string('customer_name', 100);
-            $table->string('phone', 20);
-            $table->text('address');
-
-            // अर्डर विवरण
-            $table->decimal('subtotal', 10, 2)->default(0);
-            $table->decimal('tax', 10, 2)->default(0);
-            $table->decimal('total', 10, 2);
-            $table->string('payment_method')->default('cash');
-            $table->string('payment_status')->default('unpaid');
-            $table->dateTime('preferred_delivery_time');
-
-            // स्टेटस प्रबन्धन
-            $table->enum('status', [
-                'pending',
-                'confirmed',
-                'preparing',
-                'ready_for_delivery',
-                'delivered',
-                'cancelled'
-            ])->default('pending');
-
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // User सम्बन्ध
+            $table->string('customer_name');
+            $table->string('customer_phone');
+            $table->text('delivery_address')->nullable();
             $table->text('special_instructions')->nullable();
+            $table->timestamp('preferred_delivery_time')->nullable();
+            $table->string('payment_method')->default('cash');
+            $table->enum('status', ['pending', 'confirmed', 'delivered', 'cancelled'])->default('pending');
+            $table->decimal('total_price', 10, 2)->default(0);
+            $table->boolean('is_paid')->default(false);
+            $table->boolean('is_public')->default(false);
             $table->timestamps();
-
-            // इन्डेक्स
-            $table->index(['status', 'user_id']);
         });
     }
 

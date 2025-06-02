@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\OrderItem;
-use App\Models\Dish;
+use App\Models\Menu; // ✅ Dish → Menu
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OrderItemFactory extends Factory
@@ -20,18 +20,19 @@ class OrderItemFactory extends Factory
      */
     public function definition(): array
     {
-        // Random dish छान्नुहोस्
-        $dish = Dish::inRandomOrder()->first();
+        // Random menu छान्नुहोस्
+        $menu = Menu::inRandomOrder()->first();
 
-        // यदि कुनै dish छैन भने, factory बाट बनाउनुहोस्
-        if (!$dish) {
-            $dish = Dish::factory()->create();
+        // यदि कुनै menu छैन भने, factory बाट बनाउनुहोस्
+        if (!$menu) {
+            $menu = Menu::factory()->create();
         }
 
         return [
-            'dish_id' => $dish->id,
-            'unit_price' => $dish->price, // Dish मा price फिल्ड हुनुपर्छ
+            'menu_id' => $menu->id, // ✅ dish_id → menu_id
+            'unit_price' => $menu->price, // ✅ Dish मा price फिल्ड हुनुपर्छ
             'quantity' => $this->faker->numberBetween(1, 5),
+            'total_price' => $menu->price * $this->faker->numberBetween(1, 5), // ✅ total_price समावेश गरिएको
         ];
     }
 
@@ -41,8 +42,8 @@ class OrderItemFactory extends Factory
     public function configure()
     {
         return $this->afterMaking(function (OrderItem $orderItem) {
-            // 'price' लाई 'unit_price' × 'quantity' बाट गणना गर्ने
-            $orderItem->price = $orderItem->unit_price * $orderItem->quantity;
+            // 'total_price' लाई 'unit_price' × 'quantity' बाट गणना गर्ने
+            $orderItem->total_price = $orderItem->unit_price * $orderItem->quantity;
         })->afterCreating(function (OrderItem $orderItem) {
             // आवश्यक भएमा, अतिरिक्त काम गर्नुहोस्
         });

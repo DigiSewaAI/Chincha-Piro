@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::table('galleries', function (Blueprint $table) {
-        $table->renameColumn('file_path', 'image_path');
+    Schema::table('menus', function (Blueprint $table) {
+        $table->boolean('is_featured')->default(false)->after('category_id');
     });
 }
 
 public function down()
 {
-    Schema::table('galleries', function (Blueprint $table) {
-        $table->renameColumn('image_path', 'file_path');
+    Schema::table('menus', function (Blueprint $table) {
+        $table->dropColumn('is_featured');
     });
 }
 };
