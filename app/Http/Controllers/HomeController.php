@@ -5,16 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Models\Category;
+use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
-    // Constructor
-    public function __construct()
-    {
-        //
-    }
-
-    // होमपेज (Featured Dishes र Random Dishes)
+    /**
+     * Display the homepage with featured and random dishes.
+     */
     public function index()
     {
         $featuredMenus = Menu::where('is_featured', true)->take(6)->get();
@@ -23,22 +20,28 @@ class HomeController extends Controller
         return view('home', compact('featuredMenus', 'dishes'));
     }
 
-    // सम्पूर्ण मेनु देखाउने
+    /**
+     * Show all menu items on the public menu page.
+     */
     public function menuIndex()
     {
-        $menus = Menu::with('category')->latest()->paginate(12); // Menus with category
-        $categories = Category::all(); // ✅ Fixed: यो लाइन थपिएको छ
+        $menus = Menu::with('category')->latest()->paginate(12);
+        $categories = Category::all();
 
         return view('menu.index', compact('menus', 'categories'));
     }
 
-    // डिश विवरण
+    /**
+     * Show detail of a single dish.
+     */
     public function show(Menu $menu)
     {
         return view('menu.show', compact('menu'));
     }
 
-    // नयाँ डिश स्टोर गर्ने
+    /**
+     * Store a new dish.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -46,7 +49,7 @@ class HomeController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255',
+            'image' => 'required|string|max:255', // This should ideally be a file if handled like in MenuController
             'is_featured' => 'nullable|boolean',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -58,7 +61,9 @@ class HomeController extends Controller
         return back()->with('success', 'डिश सफलतापूर्वक थपियो!');
     }
 
-    // डिश अपडेट गर्ने
+    /**
+     * Update an existing dish.
+     */
     public function update(Request $request, Menu $menu)
     {
         $validated = $request->validate([
@@ -66,7 +71,7 @@ class HomeController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255',
+            'image' => 'required|string|max:255', // Same as above — ensure consistent handling
             'is_featured' => 'nullable|boolean',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -78,9 +83,16 @@ class HomeController extends Controller
         return back()->with('success', 'डिश अपडेट भयो!');
     }
 
-    // डिश मेटाउने
+    /**
+     * Delete a dish.
+     */
     public function destroy(Menu $menu)
     {
+        // Optional: Delete associated image from storage if needed
+        if ($menu->image && Storage::disk('public')->exists($menu->image)) {
+            Storage::disk('public')->delete($menu->image);
+        }
+
         $menu->delete();
 
         return back()->with('success', 'डिश हटाइयो!');

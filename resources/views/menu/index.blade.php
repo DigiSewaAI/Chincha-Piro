@@ -1,5 +1,7 @@
 @extends('layouts.app')
+
 @section('title', 'मेनु - Chincha Piro')
+
 @section('content')
 <div class="container mx-auto px-4 py-12">
     <h1 class="text-4xl md:text-5xl font-bold text-center text-red-600 mb-6">हाम्रो मेनु</h1>
@@ -9,12 +11,13 @@
 
     <!-- Filter Buttons -->
     <div class="flex flex-wrap justify-center gap-4 mb-10">
-        <button onclick="filterMenu('all')" class="filter-btn active">सबै पकवान</button>
+        <button onclick="filterMenu('all')" class="filter-btn active" aria-pressed="true">सबै पकवान</button>
         @foreach($categories as $category)
             <button
                 onclick="filterMenu('{{ $category->id }}')"
                 class="filter-btn"
                 aria-label="फिल्टर गर्नुहोस्: {{ $category->name }}"
+                aria-pressed="false"
             >
                 {{ $category->name }}
             </button>
@@ -27,16 +30,17 @@
         <div
             class="menu-item"
             data-category="{{ $menu->category_id }}"
-            itemscope itemtype="https://schema.org/FoodEstablishment"
+            itemscope itemtype="https://schema.org/MenuItem"  <!-- सही itemtype लगाइयो -->
         >
             <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:scale-105 transition-transform duration-300">
                 <div class="h-48 bg-gray-100 relative overflow-hidden">
                     <img
-                        src="{{ Storage::url($menu->image) }}"
+                        src="{{ $menu->image ? Storage::url($menu->image) : asset('images/placeholder.png') }}"
                         alt="{{ $menu->name }}"
                         loading="lazy"
                         itemprop="image"
                         class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        onerror="this.onerror=null;this.src='{{ asset('images/placeholder.png') }}';"
                     >
                     @if($menu->is_featured)
                         <span class="absolute top-3 right-3 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">FEATURED</span>
@@ -67,6 +71,7 @@
                 role="dialog"
                 aria-labelledby="orderModalLabel{{ $menu->id }}"
                 aria-hidden="true"
+                tabindex="-1"
             >
                 <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn">
                     <button
@@ -82,62 +87,26 @@
                         <input type="hidden" name="menu_id" value="{{ $menu->id }}">
                         <div class="mb-4">
                             <label for="customer_name_{{ $menu->id }}" class="block text-gray-700 mb-2">ग्राहकको नाम</label>
-                            <input
-                                type="text"
-                                name="customer_name"
-                                id="customer_name_{{ $menu->id }}"
-                                required
-                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-                            >
+                            <input type="text" name="customer_name" required id="customer_name_{{ $menu->id }}" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
                         </div>
                         <div class="mb-4">
                             <label for="phone_{{ $menu->id }}" class="block text-gray-700 mb-2">फोन नम्बर</label>
-                            <input
-                                type="tel"
-                                name="phone"
-                                id="phone_{{ $menu->id }}"
-                                required
-                                pattern="98\d{8}|97\d{8}"
-                                placeholder="98XXXXXXXX"
-                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-                            >
+                            <input type="tel" name="phone" id="phone_{{ $menu->id }}" required pattern="98\d{8}|97\d{8}" placeholder="98XXXXXXXX" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
                             <small class="text-gray-500">उदाहरण: 9841234567</small>
                         </div>
                         <div class="mb-4">
                             <label for="address_{{ $menu->id }}" class="block text-gray-700 mb-2">ठेगाना</label>
-                            <textarea
-                                name="address"
-                                id="address_{{ $menu->id }}"
-                                required
-                                rows="2"
-                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-                            ></textarea>
+                            <textarea name="address" id="address_{{ $menu->id }}" required rows="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
                         </div>
                         <div class="mb-4">
                             <label for="special_instructions_{{ $menu->id }}" class="block text-gray-700 mb-2">विशेष निर्देश (वैकल्पिक)</label>
-                            <textarea
-                                name="special_instructions"
-                                id="special_instructions_{{ $menu->id }}"
-                                rows="2"
-                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-                            ></textarea>
+                            <textarea name="special_instructions" id="special_instructions_{{ $menu->id }}" rows="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
                         </div>
                         <div class="mb-4">
                             <label for="quantity_{{ $menu->id }}" class="block text-gray-700 mb-2">मात्रा</label>
-                            <input
-                                type="number"
-                                name="quantity"
-                                id="quantity_{{ $menu->id }}"
-                                min="1"
-                                max="20"
-                                value="1"
-                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
-                            >
+                            <input type="number" name="quantity" id="quantity_{{ $menu->id }}" min="1" max="20" value="1" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
                         </div>
-                        <button
-                            type="submit"
-                            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
-                        >
+                        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">
                             अर्डर पुष्टि गर्नुहोस्
                         </button>
                     </form>
@@ -153,20 +122,15 @@
 
     <!-- Pagination -->
     <div class="mt-12">
-        {{ $menus->links('vendor.pagination.tailwind') }}
+        {{ $menus->links() }} <!-- Laravelको डिफल्ट पेजिनेशन प्रयोग गरिएको -->
     </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    // Initialize filter on page load
     document.addEventListener('DOMContentLoaded', () => {
-        const activeBtn = document.querySelector('.filter-btn.active');
-        if (activeBtn) {
-            filterMenu('all');
-            activeBtn.setAttribute('aria-pressed', 'true');
-        }
+        filterMenu('all');
     });
 
     function toggleModal(id) {
@@ -186,30 +150,21 @@
         }
     });
 
-    document.querySelectorAll('[id^="orderModal"]').forEach(modal => {
-        modal.addEventListener('click', e => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
-                modal.setAttribute('aria-hidden', 'true');
-            }
-        });
-    });
-
     function filterMenu(categoryId) {
         const items = document.querySelectorAll('.menu-item');
         items.forEach(item => {
             item.style.display = (categoryId === 'all' || item.dataset.category === categoryId) ? 'block' : 'none';
         });
+
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
             btn.setAttribute('aria-pressed', 'false');
         });
-        if (categoryId !== 'all') {
-            const activeBtn = document.querySelector(`[onclick="filterMenu('${categoryId}')"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-                activeBtn.setAttribute('aria-pressed', 'true');
-            }
+
+        const activeBtn = document.querySelector(`[onclick="filterMenu('${categoryId}')"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
         }
     }
 </script>

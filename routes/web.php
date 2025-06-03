@@ -7,12 +7,13 @@ use App\Http\Controllers\{
     AdminController,
     DashboardController,
     OrderController,
-    MenuController,
     GalleryController,
     ContactController,
     ReservationController,
-    TranslateController
+    TranslateController,
+    MenuController,
 };
+use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 
 // ------------------
 // 🔓 Public Routes
@@ -96,7 +97,7 @@ Route::prefix('admin')
         Route::get('orders/{order}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
 
         // Menu Management
-        Route::resource('menu', MenuController::class)->except(['show']); // admin.menu.*
+        Route::resource('menu', AdminMenuController::class)->except(['show']); // admin.menu.*
 
         // Reservation Management
         Route::resource('reservations', ReservationController::class)->except(['index', 'store']);

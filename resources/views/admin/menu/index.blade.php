@@ -9,9 +9,18 @@
         </a>
     </div>
 
+    {{-- सफलता सन्देश प्रदर्शन --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- त्रुटि सन्देश प्रदर्शन --}}
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -33,22 +42,22 @@
                         @forelse($menus as $menu)
                             <tr>
                                 <td class="text-center">
-                                    @if($menu->image && file_exists(public_path('storage/' . $menu->image)))
+                                    @if($menu->image && Storage::disk('public')->exists($menu->image))
                                         <img src="{{ asset('storage/' . $menu->image) }}"
                                              alt="{{ $menu->name }}"
                                              width="80"
                                              height="80"
-                                             class="rounded shadow-sm img-thumbnail object-fit-cover"
+                                             class="rounded shadow-sm img-thumbnail"
                                              style="object-fit: cover;">
                                     @else
-                                        <span class="text-muted">No Image</span>
+                                        <span class="text-muted">तस्वीर छैन</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="fw-bold">{{ $menu->name }}</div>
                                     <small class="text-muted d-block">{{ Str::limit($menu->description, 30) }}</small>
                                     @if($menu->is_featured)
-                                        <span class="badge bg-danger mt-1">Featured</span>
+                                        <span class="badge bg-danger mt-1">विशेष</span>
                                     @endif
                                 </td>
                                 <td class="text-end">रु {{ number_format($menu->price, 2) }}</td>
@@ -59,20 +68,23 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
+                                        {{-- सम्पादन बटन --}}
                                         <a href="{{ route('admin.menu.edit', $menu) }}"
                                            class="btn btn-sm btn-outline-primary"
                                            title="सम्पादन गर्नुहोस्">
                                             <i class="fas fa-edit"></i>
                                         </a>
+
+                                        {{-- मेटाउने फारम --}}
                                         <form action="{{ route('admin.menu.destroy', $menu) }}"
                                               method="POST"
-                                              class="delete-form d-inline-block">
+                                              class="d-inline-block">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-danger delete-btn"
-                                                    data-name="{{ $menu->name }}"
-                                                    title="मेटाउनुहोस्">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="मेटाउनुहोस्"
+                                                    onclick="return confirm('के तपाईँ \'{{ $menu->name }}\' मेनु मेटाउन निश्चित हुनुहुन्छ?')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -92,6 +104,7 @@
             </div>
         </div>
 
+        {{-- पेजिनेसन --}}
         @if($menus->hasPages())
             <div class="card-footer bg-white d-flex justify-content-center">
                 {{ $menus->links() }}
@@ -100,20 +113,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const form = this.closest('form');
-                const name = this.dataset.name;
-
-                if (confirm(`'${name}' मेनुलाई मेटाउन चाहनुहुन्छ?`)) {
-                    form.submit();
-                }
-            });
-        });
-    });
-</script>
-@endpush
