@@ -12,6 +12,22 @@
     {{-- Success/Error Messages --}}
     @include('partials.alerts')
 
+    {{-- Search Box --}}
+    <div class="mb-3">
+        <form action="{{ route('admin.menu.index') }}" method="GET" class="d-flex align-items-center gap-2">
+            <input type="text" name="search" class="form-control shadow-sm" placeholder="नाम अनुसार खोज्नुहोस्..." value="{{ request('search') }}">
+            <button type="submit" class="btn btn-outline-primary shadow-sm">
+                <i class="fas fa-search me-1"></i> खोज्नुहोस्
+            </button>
+            @if(request('search'))
+                <a href="{{ route('admin.menu.index') }}" class="btn btn-outline-secondary shadow-sm">
+                    <i class="fas fa-times me-1"></i> रिसेट
+                </a>
+            @endif
+        </form>
+    </div>
+
+    {{-- Menu Table --}}
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -71,14 +87,12 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <!-- Edit Button -->
                                         <a href="{{ route('admin.menu.edit', $menu->id) }}"
                                            class="btn btn-sm btn-outline-primary px-3 shadow-sm"
                                            title="सम्पादन गर्नुहोस्">
                                             <i class="fas fa-pen me-1"></i> सम्पादन
                                         </a>
 
-                                        <!-- Delete Button -->
                                         <form action="{{ route('admin.menu.destroy', $menu->id) }}"
                                               method="POST"
                                               class="d-inline"
@@ -107,10 +121,9 @@
             </div>
         </div>
 
-        <!-- Pagination -->
         @if($menus->hasPages())
             <div class="card-footer bg-white d-flex justify-content-center">
-                {{ $menus->links('pagination::bootstrap-5') }}
+                {{ $menus->appends(request()->query())->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

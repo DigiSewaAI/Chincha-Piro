@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin; // Fixed namespace
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
@@ -11,18 +11,39 @@ use Illuminate\Support\Str;
 
 class MenuController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
-        $menus = Menu::with('category')->latest()->paginate(15);
-        return view('admin.menu.index', compact('menus'));
+        // Start query with 'category' relationship
+        $query = Menu::with('category');
+
+        // Apply search filter if 'search' parameter exists
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Paginate results (15 per page)
+        $menus = $query->latest()->paginate(15);
+
+        // Return view with menus and preserve search input
+        return view('admin.menu.index', compact('menus'))
+            ->with('search', $request->get('search', ''));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
         $categories = Category::all();
         return view('admin.menu.create', compact('categories'));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -50,12 +71,18 @@ class MenuController extends Controller
         return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक थपियो!');
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Menu $menu)
     {
         $categories = Category::all();
         return view('admin.menu.edit', compact('menu', 'categories'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Menu $menu)
     {
         $validated = $request->validate([
@@ -87,6 +114,9 @@ class MenuController extends Controller
         return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक अपडेट भयो!');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Menu $menu)
     {
         if ($menu->orders()->exists()) {
