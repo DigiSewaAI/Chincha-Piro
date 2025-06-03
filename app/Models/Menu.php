@@ -8,12 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
+// आवश्यक मोडेलहरू आयात गर्नुहोस्
+use App\Models\Category;
+use App\Models\Order;
+
 class Menu extends Model
 {
     use HasFactory;
 
     /**
-     * The attributes that are mass assignable.
+     * Mass assignable attributes.
+     *
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -21,19 +27,22 @@ class Menu extends Model
         'price',
         'image',
         'category_id',
-        'is_featured'
+        'status',
+        'is_featured',
     ];
 
     /**
-     * The attributes that should be cast to native types.
+     * Attribute casting.
+     *
+     * @var array<string, string>
      */
     protected $casts = [
         'is_featured' => 'boolean',
-        'price' => 'float'
+        'price' => 'float',
     ];
 
     /**
-     * Get the category this menu belongs to.
+     * Relationship: Menu belongs to a Category.
      */
     public function category(): BelongsTo
     {
@@ -41,7 +50,7 @@ class Menu extends Model
     }
 
     /**
-     * Get the orders associated with this menu item.
+     * Relationship: Menu has many Orders.
      */
     public function orders(): HasMany
     {
@@ -49,19 +58,25 @@ class Menu extends Model
     }
 
     /**
-     * Get the full image URL.
+     * Accessor: Full image URL.
+     *
+     * @return string
      */
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): string
     {
         if ($this->image && Storage::disk('public')->exists($this->image)) {
             return Storage::url($this->image);
         }
 
+        // Default image if not found
         return asset('images/menu-default.jpg');
     }
 
     /**
-     * Scope for featured menu items.
+     * Scope: Only featured menu items.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeFeatured($query)
     {
@@ -69,9 +84,13 @@ class Menu extends Model
     }
 
     /**
-     * Scope for items in a specific category.
+     * Scope: Filter by category ID.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $categoryId
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeInCategory($query, $categoryId)
+    public function scopeInCategory($query, int $categoryId)
     {
         return $query->where('category_id', $categoryId);
     }

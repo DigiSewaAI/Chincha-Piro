@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 
+// ✨ आवश्यक मोडेलहरू आयात गर्नुहोस्
+use App\Models\User;
+use App\Models\Menu;
+use App\Models\OrderItem;
+use App\Models\StatusHistory;
+
 class Order extends Model
 {
     use HasFactory;

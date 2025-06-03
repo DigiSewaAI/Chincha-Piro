@@ -11,9 +11,9 @@ use App\Http\Controllers\{
     ContactController,
     ReservationController,
     TranslateController,
-    MenuController,
+    MenuController, // Public MenuController
 };
-use App\Http\Controllers\Admin\MenuController as AdminMenuController;
+use App\Http\Controllers\Admin\MenuController as AdminMenuController; // Admin MenuController
 
 // ------------------
 // 🔓 Public Routes
@@ -21,9 +21,9 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// ✅ Public Menu Routes (show + list)
+// ✅ Public Menu Routes
 Route::get('/menu', [MenuController::class, 'publicMenu'])->name('menu.index');
-Route::get('/menu/{menu}', [MenuController::class, 'show'])->name('menu.show');
+Route::get('/menu/{id}', [MenuController::class, 'show'])->name('menu.show');
 
 // Public Gallery & Static Pages
 Route::get('/gallery', [GalleryController::class, 'publicIndex'])->name('gallery.public');
@@ -65,18 +65,20 @@ require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
+
+    // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // User Order Management
+    // User Orders
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/history', [OrderController::class, 'index'])->name('index');
         Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::get('/{order}/receipt', [OrderController::class, 'downloadReceipt'])->name('receipt');
     });
 
-    // User Reservation
+    // User Reservations
     Route::resource('reservations', ReservationController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 
@@ -88,26 +90,25 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', 'role:admin'])
     ->group(function () {
-        // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
 
-        // Order Management
+        // 🧾 Order Management
         Route::resource('orders', OrderController::class)->except(['create', 'store']);
         Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('orders/{order}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
 
-        // Menu Management
-        Route::resource('menu', AdminMenuController::class)->except(['show']); // admin.menu.*
+        // 🍽️ Menu Management (using Admin MenuController)
+        Route::resource('menu', AdminMenuController::class)->except(['show']);
 
-        // Reservation Management
+        // 🛎️ Reservation Management
         Route::resource('reservations', ReservationController::class)->except(['index', 'store']);
         Route::get('reservations/history', [ReservationController::class, 'history'])->name('reservations.history');
 
-        // Gallery Management
+        // 🖼️ Gallery Management
         Route::resource('gallery', GalleryController::class)->except(['show']);
         Route::patch('gallery/{gallery}/toggle-status', [GalleryController::class, 'toggleStatus'])->name('gallery.toggleStatus');
         Route::post('gallery/{gallery}/mark-featured', [GalleryController::class, 'markFeatured'])->name('gallery.markFeatured');
 
-        // Site Settings
+        // ⚙️ Site Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     });

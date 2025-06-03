@@ -27,15 +27,11 @@
     <!-- Menu Grid -->
     <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         @forelse($menus as $menu)
-        <div
-            class="menu-item"
-            data-category="{{ $menu->category_id }}"
-            itemscope itemtype="https://schema.org/MenuItem"  <!-- सही itemtype लगाइयो -->
-        >
+        <div class="menu-item" data-category="{{ $menu->category_id }}" itemscope itemtype="https://schema.org/FoodEstablishment">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:scale-105 transition-transform duration-300">
                 <div class="h-48 bg-gray-100 relative overflow-hidden">
                     <img
-                        src="{{ $menu->image ? Storage::url($menu->image) : asset('images/placeholder.png') }}"
+                        src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}"
                         alt="{{ $menu->name }}"
                         loading="lazy"
                         itemprop="image"
@@ -81,22 +77,33 @@
                     >
                         &times;
                     </button>
-                    <h3 id="orderModalLabel{{ $menu->id }}" class="text-2xl font-bold text-gray-800 mb-4">अर्डर गर्नुहोस्: {{ $menu->name }}</h3>
+                    <h3 id="orderModalLabel{{ $menu->id }}" class="text-2xl font-bold text-gray-800 mb-4">
+                        अर्डर गर्नुहोस्: {{ $menu->name }}
+                    </h3>
                     <form action="{{ route('orders.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="menu_id" value="{{ $menu->id }}">
                         <div class="mb-4">
                             <label for="customer_name_{{ $menu->id }}" class="block text-gray-700 mb-2">ग्राहकको नाम</label>
                             <input type="text" name="customer_name" required id="customer_name_{{ $menu->id }}" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
+                            @error('customer_name')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="mb-4">
                             <label for="phone_{{ $menu->id }}" class="block text-gray-700 mb-2">फोन नम्बर</label>
                             <input type="tel" name="phone" id="phone_{{ $menu->id }}" required pattern="98\d{8}|97\d{8}" placeholder="98XXXXXXXX" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
                             <small class="text-gray-500">उदाहरण: 9841234567</small>
+                            @error('phone')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="mb-4">
                             <label for="address_{{ $menu->id }}" class="block text-gray-700 mb-2">ठेगाना</label>
                             <textarea name="address" id="address_{{ $menu->id }}" required rows="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
+                            @error('address')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="mb-4">
                             <label for="special_instructions_{{ $menu->id }}" class="block text-gray-700 mb-2">विशेष निर्देश (वैकल्पिक)</label>
@@ -122,7 +129,7 @@
 
     <!-- Pagination -->
     <div class="mt-12">
-        {{ $menus->links() }} <!-- Laravelको डिफल्ट पेजिनेशन प्रयोग गरिएको -->
+        {{ $menus->links('pagination::bootstrap-5') }}
     </div>
 </div>
 @endsection

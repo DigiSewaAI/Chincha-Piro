@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin; // Fixed namespace
 
 use App\Http\Controllers\Controller;
 use App\Models\Menu;
@@ -11,27 +11,18 @@ use Illuminate\Support\Str;
 
 class MenuController extends Controller
 {
-    /**
-     * Display a listing of the resource (Admin view).
-     */
     public function index()
     {
         $menus = Menu::with('category')->latest()->paginate(15);
         return view('admin.menu.index', compact('menus'));
     }
 
-    /**
-     * Show the form for creating a new menu.
-     */
     public function create()
     {
         $categories = Category::all();
         return view('admin.menu.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created menu in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -40,14 +31,17 @@ class MenuController extends Controller
             'category_id' => 'required|exists:categories,id',
             'image' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'description' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'status' => 'nullable|boolean',
         ]);
 
-        $validated['is_featured'] = $request->has('is_featured');
+        $validated['status'] = $request->has('status') ? 1 : 0;
+        $validated['is_featured'] = $request->has('is_featured') ? 1 : 0;
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $cleanedName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME));
-            $imageName = $cleanedName . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $imageName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
+                        . '_' . time() . '.' . $image->getClientOriginalExtension();
             $validated['image'] = $image->storeAs('menu_images', $imageName, 'public');
         }
 
@@ -56,18 +50,12 @@ class MenuController extends Controller
         return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक थपियो!');
     }
 
-    /**
-     * Show the form for editing the specified menu.
-     */
     public function edit(Menu $menu)
     {
         $categories = Category::all();
         return view('admin.menu.edit', compact('menu', 'categories'));
     }
 
-    /**
-     * Update the specified menu in storage.
-     */
     public function update(Request $request, Menu $menu)
     {
         $validated = $request->validate([
@@ -76,19 +64,21 @@ class MenuController extends Controller
             'category_id' => 'required|exists:categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'description' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'status' => 'nullable|boolean',
         ]);
 
-        $validated['is_featured'] = $request->has('is_featured');
+        $validated['is_featured'] = $request->has('is_featured') ? 1 : 0;
+        $validated['status'] = $request->has('status') ? 1 : 0;
 
         if ($request->hasFile('image')) {
-            // Delete old image if exists
             if ($menu->image && Storage::disk('public')->exists($menu->image)) {
                 Storage::disk('public')->delete($menu->image);
             }
 
             $image = $request->file('image');
-            $cleanedName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME));
-            $imageName = $cleanedName . '_' . time() . '.' . $image->getClientOriginalExtension();
+            $imageName = Str::slug(pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME))
+                        . '_' . time() . '.' . $image->getClientOriginalExtension();
             $validated['image'] = $image->storeAs('menu_images', $imageName, 'public');
         }
 
@@ -97,23 +87,17 @@ class MenuController extends Controller
         return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक अपडेट भयो!');
     }
 
-    /**
-     * Remove the specified menu from storage.
-     */
     public function destroy(Menu $menu)
     {
-        // Check for existing relationships (e.g., orders)
         if ($menu->orders()->exists()) {
             return redirect()->back()->with('error', 'असफल: मेनु आइटमले पहिले नै अर्डरहरू छन्, मेटाउन सकिँदैन।');
         }
 
-        // Delete associated image
         if ($menu->image && Storage::disk('public')->exists($menu->image)) {
             Storage::disk('public')->delete($menu->image);
         }
 
-        // Permanent delete
-        $menu->forceDelete();
+        $menu->delete();
 
         return redirect()->route('admin.menu.index')->with('success', 'मेनु सफलतापूर्वक मेटियो!');
     }

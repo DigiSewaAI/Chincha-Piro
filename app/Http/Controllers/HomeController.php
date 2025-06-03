@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Menu;
 use App\Models\Category;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -49,7 +49,7 @@ class HomeController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255', // This should ideally be a file if handled like in MenuController
+            'image' => 'required|string|max:255', // If you're storing path directly as string
             'is_featured' => 'nullable|boolean',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -71,7 +71,7 @@ class HomeController extends Controller
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'spice_level' => 'required|integer|min:0|max:5',
-            'image' => 'required|string|max:255', // Same as above — ensure consistent handling
+            'image' => 'required|string|max:255',
             'is_featured' => 'nullable|boolean',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -80,7 +80,7 @@ class HomeController extends Controller
 
         $menu->update($validated);
 
-        return back()->with('success', 'डिश अपडेट भयो!');
+        return back()->with('success', 'डिश सफलतापूर्वक अपडेट भयो!');
     }
 
     /**
@@ -88,13 +88,12 @@ class HomeController extends Controller
      */
     public function destroy(Menu $menu)
     {
-        // Optional: Delete associated image from storage if needed
         if ($menu->image && Storage::disk('public')->exists($menu->image)) {
             Storage::disk('public')->delete($menu->image);
         }
 
         $menu->delete();
 
-        return back()->with('success', 'डिश हटाइयो!');
+        return back()->with('success', 'डिश सफलतापूर्वक हटाइयो!');
     }
 }

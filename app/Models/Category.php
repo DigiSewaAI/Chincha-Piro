@@ -4,17 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Dish; // Dish मोडलको Import
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
     use HasFactory;
 
     /**
-     * Category ले धेरै Dishes राख्छ
+     * Mass assignable attributes.
+     *
+     * @var array<int, string>
      */
-    public function dishes()
+    protected $fillable = [
+        'name',
+        'description', // तपाईं future मा multilingual वा विवरण राख्न चाहनुहुन्छ भने
+    ];
+
+    /**
+     * Relationship: A Category has many Menus.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function menus(): HasMany
     {
-        return $this->hasMany(Dish::class); // hasMany सम्बन्ध
+        return $this->hasMany(Menu::class);
+    }
+
+    /**
+     * Scope: Filter by name.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $name
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithName($query, string $name)
+    {
+        return $query->where('name', $name);
     }
 }
