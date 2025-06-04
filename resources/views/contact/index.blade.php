@@ -5,47 +5,42 @@
 @section('content')
 <div class="max-w-6xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
     <!-- Header Section -->
-    <div class="bg-gradient-to-r from-orange-500 to-red-400 p-6 text-white">
+    <div class="bg-gradient-to-r from-red-600 to-red-400 p-6 text-white">
         <h1 class="text-3xl font-bold flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-yellow-300 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2v10a2 2 0 00-2 2z" />
             </svg>
             हामी सँग सम्पर्क गर्नुहोस्
         </h1>
-        <p class="text-orange-100 mt-1">कुनै प्रश्न, सुझाव वा सहयोगको लागि सन्देश पठाउनुहोस्</p>
+        <p class="text-red-100 mt-1">कुनै प्रश्न, सुझाव वा सहयोगको लागि सन्देश पठाउनुहोस्</p>
     </div>
 
     <!-- Main Content -->
     <div class="p-6 md:grid md:grid-cols-2 gap-8">
         <!-- Contact Info -->
         <div class="space-y-6">
-            <!-- Address -->
-            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-red-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">📍 हाम्रो ठेगाना</h3>
-                <p class="nepali-font">{{ $contactInfo['address'] }}</p> <!-- ✅ Dynamic Data -->
+                <p class="nepali-font">{{ $contactInfo['address'] }}</p>
             </div>
 
-            <!-- Phone -->
-            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-red-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">📞 सम्पर्क नम्बर</h3>
-                <p>{{ $contactInfo['phone'] }}</p> <!-- ✅ Dynamic Data -->
-                <p>{{ $contactInfo['mobile'] }} (WhatsApp)</p> <!-- ✅ Dynamic Data -->
+                <p>{{ $contactInfo['phone'] }}</p>
+                <p>{{ $contactInfo['mobile'] }} (WhatsApp)</p>
             </div>
 
-            <!-- Email -->
-            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-red-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">✉️ इमेल</h3>
-                <p>{{ $contactInfo['email'] }}</p> <!-- ✅ Dynamic Data -->
+                <p>{{ $contactInfo['email'] }}</p>
             </div>
 
-            <!-- Business Hours -->
-            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-red-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">⏰ सेवा समय</h3>
-                <p>{{ $contactInfo['business_hours'] }}</p> <!-- ✅ Dynamic Data -->
+                <p>{{ $contactInfo['business_hours'] }}</p>
             </div>
 
-            <!-- Social Media -->
-            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-red-500">
                 <h3 class="text-xl font-semibold text-gray-800 mb-2">🌐 सामाजिक सञ्जाल</h3>
                 <div class="flex space-x-4">
                     <a href="#" class="text-blue-600 hover:text-blue-800">Facebook</a>
@@ -57,7 +52,6 @@
 
         <!-- Contact Form -->
         <div class="mt-6 md:mt-0">
-            <!-- Success/Error Message -->
             @if(session('success'))
                 <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg">
                     {{ session('success') }}
@@ -68,7 +62,6 @@
                 </div>
             @endif
 
-            <!-- Contact Form -->
             <form action="{{ route('contact.submit') }}" method="POST" class="space-y-4">
                 @csrf
 
@@ -76,7 +69,7 @@
                 <div>
                     <label for="name_np" class="block text-sm font-medium text-gray-700 mb-1">तपाईंको नाम</label>
                     <input type="text" name="name" id="name_np" value="{{ old('name') }}" required
-                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-orange-200 focus:border-orange-500 transition duration-300"
+                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-red-200 focus:border-red-500 transition duration-300"
                         placeholder="तपाईंको नाम">
                     @error('name')
                         <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
@@ -87,7 +80,7 @@
                 <div>
                     <label for="email_np" class="block text-sm font-medium text-gray-700 mb-1">ईमेल</label>
                     <input type="email" name="email" id="email_np" value="{{ old('email') }}" required
-                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-orange-200 focus:border-orange-500 transition duration-300"
+                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-red-200 focus:border-red-500 transition duration-300"
                         placeholder="तपाईंको इमेल">
                     @error('email')
                         <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
@@ -98,7 +91,7 @@
                 <div>
                     <label for="message_np" class="block text-sm font-medium text-gray-700 mb-1">सन्देश</label>
                     <textarea name="message" id="message_np" rows="5" required
-                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-orange-200 focus:border-orange-500 transition duration-300"
+                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:ring-red-200 focus:border-red-500 transition duration-300"
                         placeholder="तपाईंको सन्देश...">{{ old('message') }}</textarea>
                     @error('message')
                         <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
@@ -115,7 +108,7 @@
 
                 <!-- Submit Button -->
                 <button type="submit"
-                    class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105">
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105">
                     सन्देश पठाउनुहोस्
                 </button>
             </form>
@@ -139,12 +132,10 @@
 
 @section('scripts')
 <script>
-    // Toast Notification
     @if(session('success'))
         alert("{{ session('success') }}");
     @endif
 </script>
 
-<!-- reCAPTCHA JS -->
 {!! NoCaptcha::renderJs() !!}
 @endsection

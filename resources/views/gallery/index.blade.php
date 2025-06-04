@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-10">
-    <h1 class="text-4xl font-extrabold text-center text-orange-600 mb-8 nepali-font">
+    <h1 class="text-4xl font-extrabold text-center text-red-600 mb-8 nepali-font">
         हाम्रो फोटो तथा भिडियो ग्यालरी
     </h1>
 
