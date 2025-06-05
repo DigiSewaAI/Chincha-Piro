@@ -17,7 +17,7 @@ use App\Http\Controllers\{
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 
 // ------------------
-// 🔓 Public Routes
+// 🔓 Public Routes (Web Middleware सँग)
 // ------------------
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -44,15 +44,16 @@ Route::post('/translate-text', [TranslateController::class, 'translate'])->name(
 // Reservation List Page (public)
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 
-// ✅ Public Cart & Order Routes
+// ✅ Public Cart Routes (Web Middleware सँग)
 Route::prefix('cart')->name('cart.')->group(function () {
-    // Add to Cart (POST)
-    Route::post('/add/{id}', [CartController::class, 'add'])->name('add');
+    // AJAX: Add to Cart (POST)
+    Route::post('/add', [CartController::class, 'addToCart'])->name('add');
 
-    // AJAX Cart Count (GET)
+    // AJAX: Cart Count (GET)
     Route::get('/count', [CartController::class, 'getCount'])->name('count');
 });
 
+// Public Orders
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/create', [OrderController::class, 'create'])->name('create');

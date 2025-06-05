@@ -28,19 +28,21 @@ class CartController extends Controller
     }
 
     /**
-     * Add a menu item to the cart.
+     * Add a menu item to the cart via AJAX.
      */
-    public function add(Request $request, $id)
+    public function addToCart(Request $request)
     {
         $validated = $request->validate([
+            'menu_id' => 'required|exists:menus,id',
             'quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // ✅ Corrected: Query Builder मार्फत lockForUpdate() प्रयोग
-            $menu = Menu::where('id', $id)->lockForUpdate()->firstOrFail();
+            // ✅ Lock menu item for update to avoid race condition
+            $menu = Menu::where('id', $validated['menu_id'])->lockForUpdate()->firstOrFail();
 
             // Stock validation
             if ($menu->stock < $validated['quantity']) {
@@ -55,7 +57,7 @@ class CartController extends Controller
             $cartItem = $cart->items()->updateOrCreate(
                 ['menu_id' => $menu->id],
                 [
-                    'price' => $menu->price,
+                    'price' => $validated['price'],
                     'quantity' => DB::raw("quantity + {$validated['quantity']}")
                 ]
             );
@@ -67,7 +69,8 @@ class CartController extends Controller
 
             $responseData = [
                 'success' => "Item added to cart!",
-                'cart_count' => $cart->items()->sum('quantity')
+                'cart_count' => $cart->items()->sum('quantity'),
+                'cart_total' => $this->calculateCartTotal($cart)
             ];
 
             return $this->handleResponse($request, $responseData);

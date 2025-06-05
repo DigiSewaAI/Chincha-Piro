@@ -13,7 +13,7 @@
       <p class="text-3xl md:text-5xl nepali-font text-red-400 italic mb-8">"Welcome to Chincha Piro"</p>
       <div class="flex flex-col md:flex-row justify-center gap-6">
         <a href="#menu" class="bg-red-600 text-white px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-700 transition-all">मेनु हेर्नुहोस्</a>
-        <a href="{{ route('cart.index') }}" class="border-2 border-red-600 text-red-500 px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-600 hover:text-white transition-all">कार्टमा थप्नुहोस्</a>
+        <a href="{{ route('cart.index') }}" class="border-2 border-red-600 text-red-500 px-12 py-4 rounded-full nepali-font text-xl hover:bg-red-600 hover:text-white transition-all">कार्ट हेर्नुहोस्</a>
       </div>
     </div>
   </div>
@@ -31,13 +31,11 @@
       @forelse ($featuredMenus as $menu)
       <div class="group relative bg-white rounded-3xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
         <div class="relative h-96 overflow-hidden">
-          <img src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}">
-
+          <img src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}" class="w-full h-full object-cover" alt="{{ $menu->name }}">
           <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-            <!-- नयाँ कार्ट बटन -->
-            <form action="{{ route('cart.add', $menu->id) }}" method="POST">
+            <form action="{{ route('cart.add', $menu->id) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-2">
               @csrf
-              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded mr-2">
+              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded">
               <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded-full nepali-font text-md hover:bg-red-700 transition-all flex items-center justify-center gap-2">
                 कार्टमा थप्नुहोस्
               </button>
@@ -76,10 +74,9 @@
         <div class="relative h-96 overflow-hidden">
           <img src="{{ $dish->image ? Storage::url($dish->image) : asset('images/placeholder.png') }}" alt="{{ $dish->name }}" class="w-full h-full object-cover">
           <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-            <!-- नयाँ कार्ट बटन -->
-            <form action="{{ route('cart.add', $dish->id) }}" method="POST">
+            <form action="{{ route('cart.add', $dish->id) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-2">
               @csrf
-              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded mr-2">
+              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded">
               <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded-full nepali-font text-md hover:bg-red-700 transition-all flex items-center justify-center gap-2">
                 कार्टमा थप्नुहोस्
               </button>

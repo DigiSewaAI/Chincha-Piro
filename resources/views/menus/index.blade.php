@@ -49,14 +49,17 @@
                             <span class="text-sm text-green-600 font-medium">उपलब्ध: {{ $menu->stock }}</span>
                         </div>
 
-                        <!-- ✅ "Add to Cart" Button (AJAX सँग सुसंगत) -->
-                        <button
-                            class="order-now w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                            data-id="{{ $menu->id }}"
-                            data-stock="{{ $menu->stock }}"
-                        >
-                            कार्टमा थप्नुहोस्
-                        </button>
+                        <!-- ✅ "Add to Cart" Button with Quantity -->
+                        <div class="flex items-center gap-2">
+                            <input type="number" min="1" max="{{ $menu->stock }}" value="1" class="quantity-input w-16 px-2 py-1 border rounded" data-id="{{ $menu->id }}">
+                            <button
+                                class="order-now flex-1"
+                                data-id="{{ $menu->id }}"
+                                data-stock="{{ $menu->stock }}"
+                            >
+                                कार्टमा थप्नुहोस्
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -76,32 +79,30 @@
 
 @push('scripts')
 <script>
-    // 🛒 "Add to Cart" बटनको AJAX प्रतिक्रिया
     document.addEventListener('DOMContentLoaded', function () {
+        // AJAX Add to Cart
         document.querySelectorAll('.order-now').forEach(button => {
             button.addEventListener('click', function (e) {
                 e.preventDefault();
+                const id = this.dataset.id;
+                const stock = parseInt(this.dataset.stock);
+                const quantityInput = document.querySelector(`.quantity-input[data-id="${id}"]`);
+                const quantity = parseInt(quantityInput.value) || 1;
 
-                const itemId = this.dataset.id;
-                const maxStock = parseInt(this.dataset.stock);
-
-                // 📉 स्टक जाँच
-                if (maxStock <= 0) {
-                    showToast("यो आइटम उपलब्ध छैन", "error");
+                if (quantity > stock) {
+                    showToast("उत्तिकै स्टक छैन", "error");
                     return;
                 }
 
-                fetch("{{ route('cart.add', '') }}/" + itemId, {
+                fetch(`{{ route('cart.add', '') }}/${id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({
-                        quantity: 1
-                    })
+                    body: JSON.stringify({ quantity: quantity })
                 })
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         document.getElementById('cart-count').textContent = data.cart_count;
@@ -110,37 +111,50 @@
                         showToast(data.error, "error");
                     }
                 })
-                .catch(error => {
-                    console.error("AJAX Error:", error);
+                .catch(err => {
+                    console.error("Error:", err);
                     showToast("त्रुटि भयो", "error");
                 });
             });
         });
 
-        // 📦 प्रारम्भिक कार्टको संख्या अपडेट
+        // Load cart count on page load and every 5 sec
         function loadCartCount() {
             fetch("{{ route('cart.count') }}")
                 .then(res => res.json())
                 .then(data => {
-                    const countElement = document.getElementById('cart-count');
-                    if (countElement) countElement.textContent = data.count;
+                    const el = document.getElementById('cart-count');
+                    if (el) el.textContent = data.count;
                 });
         }
-
         loadCartCount();
-        setInterval(loadCartCount, 5000); // 🕒 प्रत्येक 5 सेकण्डमा
-    });
+        setInterval(loadCartCount, 5000);
 
-    // 🎯 Toast Notification
-    function showToast(message, type = "success") {
-        const toast = document.createElement('div');
-        toast.className = `fixed bottom-4 right-4 p-4 rounded shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
+        // Menu Filter
+        window.filterMenu = function (categoryId) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                if (categoryId === 'all' || item.dataset.category === categoryId) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Toast Notification
+        window.showToast = function (message, type = "success") {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 p-4 rounded shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    });
 </script>
 @endpush
 
@@ -167,6 +181,9 @@
     }
     .order-now {
         @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300;
+    }
+    .quantity-input {
+        @apply border border-gray-300 rounded px-2 py-1 text-center;
     }
 </style>
 @endpush
