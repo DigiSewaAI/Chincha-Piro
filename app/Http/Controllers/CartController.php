@@ -8,238 +8,241 @@ use App\Models\CartItem;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
-use App\Notifications\CartItemAdded;
 
 class CartController extends Controller
 {
     /**
-     * कार्ट पृष्ठ प्रदर्शन गर्ने
+     * Display the shopping cart.
      */
-    public function viewCart()
+    public function index()
     {
         $cart = $this->getCart();
         $cartItems = $cart->items()->with('menu')->get();
 
-        // 🛒 कार्ट खाली छ कि भने सूचना
         if ($cartItems->isEmpty()) {
-            session()->flash('info', 'तपाईंको कार्ट खाली छ।');
+            session()->flash('info', 'Your cart is empty.');
         }
 
         return view('cart.index', compact('cartItems'));
     }
 
     /**
-     * मेनु आइटमलाई कार्टमा थप्ने
+     * Add a menu item to the cart.
      */
-    public function addToCart(Request $request, $id)
+    public function add(Request $request, $id)
     {
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1',
-            'expected_price' => 'required|numeric'
         ]);
 
         DB::beginTransaction();
 
         try {
-            $menu = Menu::lockForUpdate()->findOrFail($id);
+            // ✅ Corrected: Query Builder मार्फत lockForUpdate() प्रयोग
+            $menu = Menu::where('id', $id)->lockForUpdate()->firstOrFail();
 
-            // 📉 स्टक जाँच
+            // Stock validation
             if ($menu->stock < $validated['quantity']) {
                 return $this->handleResponse($request, [
-                    'error' => "अनुरोध गरिएको मात्रा उपलब्ध स्टकभन्दा बढी छ। उपलब्ध: {$menu->stock}"
-                ], 400);
-            }
-
-            // 💰 मूल्य सत्यापन
-            if ((float) $menu->price !== (float) $validated['expected_price']) {
-                return $this->handleResponse($request, [
-                    'error' => "मूल्यमा परिवर्तन भएको छ। कृपया पृष्ठ रिफ्रेस गर्नुहोस्।"
+                    'error' => "Requested quantity exceeds available stock. Available: {$menu->stock}"
                 ], 400);
             }
 
             $cart = $this->getCart();
 
-            // 🧾 कार्टमा आइटम थप्नुहोस्
+            // Add/update cart item
             $cartItem = $cart->items()->updateOrCreate(
                 ['menu_id' => $menu->id],
                 [
                     'price' => $menu->price,
-                    'quantity' => $validated['quantity']
+                    'quantity' => DB::raw("quantity + {$validated['quantity']}")
                 ]
             );
 
-            // 📈 स्टक कम गर्नुहोस्
+            // Update stock
             $menu->decrement('stock', $validated['quantity']);
-
-            // 📣 एडमिनलाई सूचना पठाउनुहोस्
-            Notification::route('mail', 'admin@example.com')
-                ->notify(new CartItemAdded($cartItem));
 
             DB::commit();
 
             $responseData = [
-                'success' => "मेनु आइटम कार्टमा थपियो!",
-                'cart_count' => $cart->items->sum('quantity')
+                'success' => "Item added to cart!",
+                'cart_count' => $cart->items()->sum('quantity')
             ];
 
             return $this->handleResponse($request, $responseData);
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e); // Log the exception
             return $this->handleResponse($request, [
-                'error' => 'कार्ट थप्न असफल'
+                'error' => 'Failed to add item to cart'
             ], 500);
         }
     }
 
     /**
-     * कार्ट अपडेट गर्ने
+     * Update cart item quantity.
      */
-    public function updateCart(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $validated = $request->validate(['quantity' => 'required|integer|min:1']);
 
         DB::beginTransaction();
 
         try {
-            $cartItem = CartItem::where('id', $id)
+            $cartItem = CartItem::with('menu')
+                ->where('id', $id)
                 ->whereHas('cart', function ($query) {
-                    $query->where('user_id', Auth::id());
-                })->firstOrFail();
+                    Auth::check()
+                        ? $query->where('user_id', Auth::id())
+                        : $query->where('session_id', Session::getId());
+                })
+                ->firstOrFail();
 
-            $menu = $cartItem->menu()->lockForUpdate()->firstOrFail();
-
+            $menu = $cartItem->menu;
             $oldQuantity = $cartItem->quantity;
             $newQuantity = $validated['quantity'];
 
-            // 📉 स्टक अपडेट
+            // Stock validation
             $difference = $newQuantity - $oldQuantity;
             if ($difference > 0 && $menu->stock < $difference) {
                 return $this->handleResponse($request, [
-                    'error' => "अपर्याप्त स्टक! केवल {$menu->stock} उपलब्ध छ।"
+                    'error' => "Insufficient stock! Only {$menu->stock} available."
                 ], 400);
             }
 
-            $menu->increment('stock', -$difference); // 📈 स्टक अपडेट
+            // Update stock
+            $menu->decrement('stock', $difference);
             $cartItem->update(['quantity' => $newQuantity]);
 
             DB::commit();
 
             return $this->handleResponse($request, [
-                'success' => 'कार्ट अपडेट भयो!',
-                'total' => $cartItem->price * $cartItem->quantity
+                'success' => 'Cart updated!',
+                'item_total' => $cartItem->price * $newQuantity,
+                'cart_total' => $this->calculateCartTotal($cartItem->cart)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return $this->handleResponse($request, [
-                'error' => 'कार्ट अपडेट गर्न असफल'
+                'error' => 'Failed to update cart'
             ], 500);
         }
     }
 
     /**
-     * कार्टबाट आइटम हटाउने
+     * Remove an item from the cart.
      */
-    public function removeFromCart($id)
+    public function remove(Request $request, $id)
     {
         DB::beginTransaction();
 
         try {
-            $cartItem = CartItem::where('id', $id)
+            $cartItem = CartItem::with('menu')
+                ->where('id', $id)
                 ->whereHas('cart', function ($query) {
-                    $query->where('user_id', Auth::id());
-                })->firstOrFail();
+                    Auth::check()
+                        ? $query->where('user_id', Auth::id())
+                        : $query->where('session_id', Session::getId());
+                })
+                ->firstOrFail();
 
-            $menu = $cartItem->menu;
-            $menu->increment('stock', $cartItem->quantity); // 📈 स्टक बढाउनुहोस्
+            // Restore stock
+            $cartItem->menu->increment('stock', $cartItem->quantity);
+            $cart = $cartItem->cart;
             $cartItem->delete();
 
             DB::commit();
 
             return $this->handleResponse($request, [
-                'success' => 'आइटम कार्टबाट हटाइयो!',
-                'cart_count' => $this->getCart()->items->sum('quantity')
+                'success' => 'Item removed from cart!',
+                'cart_count' => $cart->items()->sum('quantity'),
+                'cart_total' => $this->calculateCartTotal($cart)
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return $this->handleResponse($request, [
-                'error' => 'आइटम हटाउन असफल'
+                'error' => 'Failed to remove item'
             ], 500);
         }
     }
 
     /**
-     * सबै कार्ट आइटम हटाउने
+     * Clear all items from the cart.
      */
-    public function clearCart()
+    public function clear(Request $request)
     {
         DB::beginTransaction();
 
         try {
             $cart = $this->getCart();
 
-            // 📈 सबै आइटमको स्टक बढाउनुहोस्
+            // Restore all stock
             $cart->items->each(function ($item) {
                 $item->menu->increment('stock', $item->quantity);
             });
 
-            $cart->items()->delete(); // 🧹 कार्ट सफा गर्नुहोस्
+            $cart->items()->delete();
 
             DB::commit();
 
             return $this->handleResponse($request, [
-                'success' => 'कार्ट सफा भयो!',
-                'cart_count' => 0
+                'success' => 'Cart cleared!',
+                'cart_count' => 0,
+                'cart_total' => 0
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
             return $this->handleResponse($request, [
-                'error' => 'कार्ट सफा गर्न असफल'
+                'error' => 'Failed to clear cart'
             ], 500);
         }
     }
 
     /**
-     * कार्टको आइटम संख्या प्राप्त गर्ने
+     * Get cart item count for AJAX display.
      */
-    public function getCartCount()
+    public function getCount()
     {
         $cart = $this->getCart();
-        $count = $cart->items->sum('quantity');
-        return response()->json(['count' => $count]);
+        return response()->json(['count' => $cart->items()->sum('quantity')]);
     }
 
     /**
-     * वर्तमान कार्ट प्राप्त गर्ने
+     * Get the current cart (session or auth user).
      */
-    protected function getCart()
+    protected function getCart(): Cart
     {
         if (Auth::check()) {
-            return Cart::firstOrCreate(['user_id' => Auth::id()]);
-        } else {
-            $sessionId = Session::getId();
-            return Cart::firstOrCreate(['session_id' => $sessionId]);
+            return Cart::with('items')->firstOrCreate(['user_id' => Auth::id()]);
         }
+
+        $sessionId = Session::getId();
+        return Cart::with('items')->firstOrCreate(['session_id' => $sessionId]);
     }
 
     /**
-     * प्रतिक्रिया प्रकारको आधारमा JSON वा रिडाइरेक्ट ह्यान्डल गर्नुहोस्
+     * Calculate the total price of items in the cart.
+     */
+    protected function calculateCartTotal(Cart $cart): float
+    {
+        return $cart->items->sum(fn($item) => $item->price * $item->quantity);
+    }
+
+    /**
+     * Handle response based on request type (AJAX or redirect).
      */
     private function handleResponse(Request $request, array $data, int $status = 200)
     {
-        if ($request->ajax() || $request->wantsJson()) {
+        if ($request->expectsJson()) {
             return response()->json($data, $status);
         }
 
-        if (isset($data['error'])) {
-            return back()->withInput()->withErrors([$data['error']]);
-        }
-
-        if (isset($data['success'])) {
-            return back()->with('success', $data['success']);
-        }
-
-        return back();
+        return $data['error']
+            ? back()->with('error', $data['error'])
+            : back()->with('success', $data['success']);
     }
 }

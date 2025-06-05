@@ -23,8 +23,10 @@ use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // ✅ Public Menu Routes
-Route::get('/menu', [MenuController::class, 'publicMenu'])->name('menu.index');
-Route::get('/menu/{id}', [MenuController::class, 'show'])->name('menu.show');
+Route::prefix('menu')->name('menu.')->group(function () {
+    Route::get('/', [MenuController::class, 'publicMenu'])->name('index');
+    Route::get('/{id}', [MenuController::class, 'show'])->name('show');
+});
 
 // Public Gallery & Static Pages
 Route::get('/gallery', [GalleryController::class, 'publicIndex'])->name('gallery.public');
@@ -44,8 +46,11 @@ Route::get('/reservations', [ReservationController::class, 'index'])->name('rese
 
 // ✅ Public Cart & Order Routes
 Route::prefix('cart')->name('cart.')->group(function () {
-    Route::post('/add/{id}', [CartController::class, 'addToCart'])->name('add');
-    Route::get('/count', [CartController::class, 'getCartCount'])->name('count'); // ✅ AJAX Cart Count API
+    // Add to Cart (POST)
+    Route::post('/add/{id}', [CartController::class, 'add'])->name('add');
+
+    // AJAX Cart Count (GET)
+    Route::get('/count', [CartController::class, 'getCount'])->name('count');
 });
 
 Route::prefix('orders')->name('orders.')->group(function () {
@@ -89,10 +94,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ✅ Cart Routes (Authenticated Users)
     Route::prefix('cart')->name('cart.')->group(function () {
-        Route::get('/', [CartController::class, 'viewCart'])->name('index'); // ✅ Single entry point
-        Route::put('/item/{id}', [CartController::class, 'updateCart'])->name('update');
-        Route::delete('/item/{id}', [CartController::class, 'removeFromCart'])->name('remove');
-        Route::delete('/clear', [CartController::class, 'clearCart'])->name('clear');
+        // View Cart
+        Route::get('/', [CartController::class, 'index'])->name('index');
+
+        // Update Cart
+        Route::put('/item/{id}', [CartController::class, 'update'])->name('update');
+
+        // Remove Item
+        Route::delete('/item/{id}', [CartController::class, 'remove'])->name('remove');
+
+        // Clear Cart
+        Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
     });
 });
 
@@ -125,4 +137,10 @@ Route::prefix('admin')
 
         // ⚙️ Site Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+
+        // 🛒 Cart Monitoring
+        Route::prefix('carts')->name('carts.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\AdminCartController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\AdminCartController::class, 'show'])->name('show');
+        });
     });

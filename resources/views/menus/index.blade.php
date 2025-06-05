@@ -49,11 +49,10 @@
                             <span class="text-sm text-green-600 font-medium">उपलब्ध: {{ $menu->stock }}</span>
                         </div>
 
-                        <!-- ✅ सही बटन (AJAX सँग समायोजित) -->
+                        <!-- ✅ "Add to Cart" Button (AJAX सँग सुसंगत) -->
                         <button
                             class="order-now w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
                             data-id="{{ $menu->id }}"
-                            data-price="{{ $menu->price }}"
                             data-stock="{{ $menu->stock }}"
                         >
                             कार्टमा थप्नुहोस्
@@ -77,48 +76,44 @@
 
 @push('scripts')
 <script>
-    // 🛒 Order Now बटनको AJAX प्रतिक्रिया
-    $(document).ready(function () {
-        $('.order-now').on('click', function(e) {
-            e.preventDefault(); // 🚫 पृष्ठ रिफ्रेस रोक्नुहोस्
+    // 🛒 "Add to Cart" बटनको AJAX प्रतिक्रिया
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.order-now').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
 
-            const itemId = $(this).data('id');
-            const expectedPrice = $(this).data('price');
-            const maxStock = $(this).data('stock');
+                const itemId = this.dataset.id;
+                const maxStock = parseInt(this.dataset.stock);
 
-            // 📉 स्टक जाँच (साइडमा स्टक प्रदर्शन गर्नुहोस्)
-            if (maxStock <= 0) {
-                Toastify({
-                    text: "यो आइटम उपलब्ध छैन",
-                    duration: 3000,
-                    backgroundColor: "linear-gradient(to right, #ff416c, #ff4b2b)"
-                }).showToast();
-                return;
-            }
-
-            $.ajax({
-                url: "{{ route('cart.add', '') }}/" + itemId,
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    quantity: 1,
-                    expected_price: expectedPrice
-                },
-                success: function(response) {
-                    $('#cart-count').text(response.cart_count); // 📦 कार्टको संख्या अपडेट
-                    Toastify({
-                        text: response.success,
-                        duration: 3000,
-                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-                    }).showToast();
-                },
-                error: function(xhr) {
-                    Toastify({
-                        text: xhr.responseJSON.error || 'त्रुटि भयो',
-                        duration: 3000,
-                        backgroundColor: "linear-gradient(to right, #ff416c, #ff4b2b)"
-                    }).showToast();
+                // 📉 स्टक जाँच
+                if (maxStock <= 0) {
+                    showToast("यो आइटम उपलब्ध छैन", "error");
+                    return;
                 }
+
+                fetch("{{ route('cart.add', '') }}/" + itemId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        quantity: 1
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('cart-count').textContent = data.cart_count;
+                        showToast(data.success, "success");
+                    } else if (data.error) {
+                        showToast(data.error, "error");
+                    }
+                })
+                .catch(error => {
+                    console.error("AJAX Error:", error);
+                    showToast("त्रुटि भयो", "error");
+                });
             });
         });
 
@@ -127,12 +122,25 @@
             fetch("{{ route('cart.count') }}")
                 .then(res => res.json())
                 .then(data => {
-                    $('#cart-count').text(data.count);
+                    const countElement = document.getElementById('cart-count');
+                    if (countElement) countElement.textContent = data.count;
                 });
         }
+
         loadCartCount();
         setInterval(loadCartCount, 5000); // 🕒 प्रत्येक 5 सेकण्डमा
     });
+
+    // 🎯 Toast Notification
+    function showToast(message, type = "success") {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 p-4 rounded shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
 </script>
 @endpush
 

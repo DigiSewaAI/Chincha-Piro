@@ -4,19 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // 📦 आवश्यक मोडेलहरू आयात गर्नुहोस्
 use App\Models\Category;
 use App\Models\Order;
-use App\Models\CartItem; // ✅ CartItem मोडेल थप्नुहोस्
+use App\Models\CartItem;
+use App\Models\Cart;
 
 use Illuminate\Support\Facades\Storage;
 
 class Menu extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Mass assignable attributes.
@@ -42,6 +44,8 @@ class Menu extends Model
     protected $casts = [
         'is_featured' => 'boolean',
         'price' => 'float',
+        'stock' => 'integer',
+        'status' => 'string',
     ];
 
     /**
@@ -66,6 +70,14 @@ class Menu extends Model
     public function cartItems(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * ✅ Relationship: Menu has many Carts through CartItems.
+     */
+    public function carts(): HasMany
+    {
+        return $this->hasManyThrough(Cart::class, CartItem::class);
     }
 
     /**
@@ -104,5 +116,73 @@ class Menu extends Model
     public function scopeInCategory($query, int $categoryId)
     {
         return $query->where('category_id', $categoryId);
+    }
+
+    /**
+     * 📉 Check if item is in stock
+     */
+    public function isInStock(int $quantity = 1): bool
+    {
+        return $this->stock >= $quantity;
+    }
+
+    /**
+     * 🔒 Lock menu item for update
+     */
+    public function lockForUpdate()
+    {
+        return $this->lockForUpdate()->findOrFail($this->id);
+    }
+
+    /**
+     * 📊 Get total quantity in cart
+     */
+    public function getCartQuantityAttribute(): int
+    {
+        return $this->cartItems->sum('quantity');
+    }
+
+    /**
+     * 📈 Update stock safely
+     */
+    public function updateStock(int $quantity, bool $increment = true): bool
+    {
+        $this->lockForUpdate();
+        if (!$this->isInStock($quantity) && !$increment) {
+            return false;
+        }
+
+        $this->stock = $increment
+            ? $this->stock + $quantity
+            : $this->stock - $quantity;
+
+        return $this->save();
+    }
+
+    /**
+     * 🧮 Calculate total value of menu in cart
+     */
+    public function getCartValueAttribute(): float
+    {
+        return $this->cartItems->sum(fn($item) => $item->price * $item->quantity);
+    }
+
+    /**
+     * 🎯 Get all carts containing this menu item
+     */
+    public function getActiveCarts()
+    {
+        return $this->carts()
+            ->whereHas('items')
+            ->with('user')
+            ->get();
+    }
+
+    /**
+     * 📦 Check if menu is available for purchase
+     */
+    public function isAvailable(int $quantity = 1): bool
+    {
+        return $this->status === 'active' && $this->isInStock($quantity);
     }
 }
