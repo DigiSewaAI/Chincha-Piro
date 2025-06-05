@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
-// आवश्यक मोडेलहरू आयात गर्नुहोस्
+// 📦 आवश्यक मोडेलहरू आयात गर्नुहोस्
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\CartItem; // ✅ CartItem मोडेल थप्नुहोस्
+
+use Illuminate\Support\Facades\Storage;
 
 class Menu extends Model
 {
@@ -25,6 +27,7 @@ class Menu extends Model
         'name',
         'description',
         'price',
+        'stock',
         'image',
         'category_id',
         'status',
@@ -55,6 +58,14 @@ class Menu extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * ✅ Relationship: Menu has many CartItems.
+     */
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(CartItem::class);
     }
 
     /**

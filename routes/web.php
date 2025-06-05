@@ -11,9 +11,10 @@ use App\Http\Controllers\{
     ContactController,
     ReservationController,
     TranslateController,
-    MenuController, // Public MenuController
+    MenuController,
+    CartController,
 };
-use App\Http\Controllers\Admin\MenuController as AdminMenuController; // Admin MenuController
+use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 
 // ------------------
 // 🔓 Public Routes
@@ -80,6 +81,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // User Reservations
     Route::resource('reservations', ReservationController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+
+    // ✅ Cart Routes
+    Route::get('/cart', [CartController::class, 'viewCart'])->name('cart.view');
+    Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::put('/cart/item/{id}', [CartController::class, 'updateCart'])->name('cart.update');
+    Route::delete('/cart/item/{id}', [CartController::class, 'removeFromCart'])->name('cart.remove');
+    Route::delete('/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
+    Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
 });
 
 // ----------------------
@@ -111,4 +120,4 @@ Route::prefix('admin')
 
         // ⚙️ Site Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
-    });
+});

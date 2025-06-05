@@ -17,7 +17,7 @@ class Category extends Model
      */
     protected $fillable = [
         'name',
-        'description', // तपाईं future मा multilingual वा विवरण राख्न चाहनुहुन्छ भने
+        'description',
     ];
 
     /**
@@ -28,6 +28,19 @@ class Category extends Model
     public function menus(): HasMany
     {
         return $this->hasMany(Menu::class);
+    }
+
+    /**
+     * Scope: Filter categories with menus having stock > 0.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWithAvailableMenus($query)
+    {
+        return $query->whereHas('menus', function ($q) {
+            $q->where('stock', '>', 0); // Only menus with stock
+        });
     }
 
     /**

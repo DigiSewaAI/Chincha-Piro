@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Menu; // ✅ Dish → Menu
+use App\Models\Menu;
 use App\Models\Category;
 use App\Models\OrderItem;
 use App\Models\StatusHistory;
@@ -20,24 +20,25 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $categories = Category::with(['menus' => function ($query) { // ✅ dishes → menus
+        // मेनुहरूलाई `is_available = true` सँग एजर लोड गर्दछ
+        $categories = Category::with(['menus' => function ($query) {
             $query->where('is_available', true)->orderBy('name_nepali');
         }])->get();
 
-        $menus = Menu::where('is_available', true)->get(); // ✅ dishes → menus
+        $menus = Menu::where('is_available', true)->get();
 
         $orders = Auth::user()->orders()
-            ->with(['items.menu', 'statusHistories']) // ✅ items.dish → items.menu
+            ->with(['items.menu', 'statusHistories'])
             ->latest()
             ->paginate(10);
 
-        return view('orders.index', compact('categories', 'orders', 'menus')); // ✅ dishes → menus
+        return view('orders.index', compact('categories', 'orders', 'menus'));
     }
 
     public function publicIndex()
     {
         $orders = Order::publicOrders()
-            ->with(['items.menu']) // ✅ items.dish → items.menu
+            ->with(['items.menu'])
             ->latest()
             ->paginate(10);
 
@@ -46,7 +47,12 @@ class OrderController extends Controller
 
     public function create()
     {
-        $categories = Category::withAvailableMenus(); // ✅ withAvailableDishes → withAvailableMenus
+        // `withAvailableMenus` स्कोप प्रयोग गरेर केवल उपलब्ध मेनुहरूसँगका श्रेणीहरू प्राप्त गर्दछ
+        // मेनुहरूलाई `stock > 0` सँग एजर लोड गर्दछ
+        $categories = Category::withAvailableMenus()->with(['menus' => function ($query) {
+            $query->where('stock', '>', 0); // केवल स्टक भएका मेनुहरू लोड गर्नुहोस्
+        }])->get();
+
         return view('orders.create', compact('categories'));
     }
 
@@ -59,7 +65,6 @@ class OrderController extends Controller
                 return $this->createOrder($validated);
             });
 
-            // ✅ Add this line to flash the order ID to session
             session()->flash('order_id', $order->id);
 
             return redirect()->route('orders.success')
@@ -85,7 +90,7 @@ class OrderController extends Controller
             ->get();
 
         return view('orders.track', [
-            'order' => $order->load('items.menu'), // ✅ items.dish → items.menu
+            'order' => $order->load('items.menu'),
             'statusHistory' => $statusHistory
         ]);
     }
@@ -134,7 +139,7 @@ class OrderController extends Controller
     {
         return Validator::make($request->all(), [
             'items' => ['required', 'array', 'min:1', new ValidOrderItems],
-            'items.*.menu_id' => 'required|exists:menus,id', // ✅ dish_id → menu_id
+            'items.*.menu_id' => 'required|exists:menus,id',
             'items.*.quantity' => 'required|integer|between:1,10',
             'items.*.note' => 'nullable|string|max:255',
             'customer_name' => [
@@ -157,7 +162,7 @@ class OrderController extends Controller
     private function createOrder(array $validated): Order
     {
         $user = Auth::user();
-        $menus = Menu::whereIn('id', collect($validated['items'])->pluck('menu_id')) // ✅ dish_id → menu_id
+        $menus = Menu::whereIn('id', collect($validated['items'])->pluck('menu_id'))
             ->available()
             ->get()
             ->keyBy('id');
@@ -186,19 +191,19 @@ class OrderController extends Controller
     private function calculateTotal(array $items, $menus): float
     {
         return collect($items)->sum(fn($item) =>
-            $menus[$item['menu_id']]->price * $item['quantity'] // ✅ dish_id → menu_id
+            $menus[$item['menu_id']]->price * $item['quantity']
         );
     }
 
     private function createOrderItems(Order $order, array $items, $menus): void
     {
         foreach ($items as $item) {
-            $menu = $menus[$item['menu_id']]; // ✅ dish_id → menu_id
+            $menu = $menus[$item['menu_id']];
             $order->items()->create([
-                'menu_id' => $menu->id, // ✅ dish_id → menu_id
+                'menu_id' => $menu->id,
                 'quantity' => $item['quantity'],
-                'price' => $menu->price, // ✅ dish → menu
-                'total' => $menu->price * $item['quantity'], // ✅ dish → menu
+                'price' => $menu->price,
+                'total' => $menu->price * $item['quantity'],
                 'note' => $item['note']
             ]);
         }
