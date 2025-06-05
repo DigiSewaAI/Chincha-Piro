@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Menu;
 use App\Models\Category;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\OrderItem;
 use App\Models\StatusHistory;
 use App\Events\NewOrderEvent;
@@ -18,44 +20,32 @@ use App\Rules\ValidOrderItems;
 
 class OrderController extends Controller
 {
-    public function index()
-    {
-        // मेनुहरूलाई `is_available = true` सँग एजर लोड गर्दछ
-        $categories = Category::with(['menus' => function ($query) {
-            $query->where('is_available', true)->orderBy('name_nepali');
-        }])->get();
-
-        $menus = Menu::where('is_available', true)->get();
-
-        $orders = Auth::user()->orders()
-            ->with(['items.menu', 'statusHistories'])
-            ->latest()
-            ->paginate(10);
-
-        return view('orders.index', compact('categories', 'orders', 'menus'));
-    }
-
-    public function publicIndex()
-    {
-        $orders = Order::publicOrders()
-            ->with(['items.menu'])
-            ->latest()
-            ->paginate(10);
-
-        return view('orders.public-index', compact('orders'));
-    }
-
+    /**
+     * Display the order creation form.
+     */
     public function create()
     {
-        // `withAvailableMenus` स्कोप प्रयोग गरेर केवल उपलब्ध मेनुहरूसँगका श्रेणीहरू प्राप्त गर्दछ
-        // मेनुहरूलाई `stock > 0` सँग एजर लोड गर्दछ
-        $categories = Category::withAvailableMenus()->with(['menus' => function ($query) {
-            $query->where('stock', '>', 0); // केवल स्टक भएका मेनुहरू लोड गर्नुहोस्
-        }])->get();
+        // Get the user's cart
+        $cart = $this->getCart();
 
-        return view('orders.create', compact('categories'));
+        // Check if cart is empty
+        if ($cart->items->isEmpty()) {
+            return redirect()->route('cart.index')
+                ->with('error', 'तपाईंको कार्ट खाली छ। कृपया कार्टमा आइटम थप्नुहोस्।');
+        }
+
+        // Load cart items with menu data
+        $cartItems = $cart->items()->with('menu')->get();
+
+        // Load available categories with menus
+        $categories = Category::withAvailableMenus()->get();
+
+        return view('orders.create', compact('cartItems', 'categories'));
     }
 
+    /**
+     * Store a newly created order in storage.
+     */
     public function store(Request $request)
     {
         $validated = $this->validateOrderRequest($request);
@@ -75,11 +65,26 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * Display the order success page.
+     */
     public function success()
     {
         return view('orders.success');
     }
 
+    /**
+     * Display the specified order.
+     */
+    public function show(Order $order)
+    {
+        $this->authorize('view', $order);
+        return view('orders.show', compact('order'));
+    }
+
+    /**
+     * Display order tracking information.
+     */
     public function track(Order $order)
     {
         $this->authorize('view', $order);
@@ -95,6 +100,9 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Update the specified order's status in storage.
+     */
     public function updateStatus(Request $request, Order $order)
     {
         $this->authorize('update', $order);
@@ -108,6 +116,9 @@ class OrderController extends Controller
         return back()->with('success', 'स्थिति अद्यावधिक भयो: ' . $order->status);
     }
 
+    /**
+     * Remove the specified order from storage.
+     */
     public function destroy(Order $order)
     {
         $this->authorize('delete', $order);
@@ -123,7 +134,7 @@ class OrderController extends Controller
     }
 
     /**********************************
-     * निजी सहयोगी विधिहरू
+     * Private Helper Methods
      **********************************/
 
     private function processFilters(): array
@@ -236,6 +247,19 @@ class OrderController extends Controller
     {
         if ($order->isCompleted()) {
             throw new \Exception('पूरा भएको अर्डर मेटाउन असमर्थ');
+        }
+    }
+
+    /**
+     * Get the current user's cart
+     */
+    protected function getCart()
+    {
+        if (Auth::check()) {
+            return Cart::with('items.menu')->firstOrCreate(['user_id' => Auth::id()]);
+        } else {
+            $sessionId = session()->getId();
+            return Cart::with('items.menu')->firstOrCreate(['session_id' => $sessionId]);
         }
     }
 }

@@ -9,22 +9,24 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('menus', function (Blueprint $table) {
-            // Stock फिल्ड थप्दा unsigned गर्नुहोस् (न्यूनतम मान 0 हुने)
-            $table->integer('stock')->default(0)->unsigned()->after('price');
+            if (!Schema::hasColumn('menus', 'stock')) {
+                $table->unsignedInteger('stock')->default(0)->after('price')->comment('Available quantity in stock');
+            }
         });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('menus', function (Blueprint $table) {
-            // Stock फिल्ड हटाउनुहोस्
-            $table->dropColumn('stock');
+            if (Schema::hasColumn('menus', 'stock')) {
+                $table->dropColumn('stock');
+            }
         });
     }
 };

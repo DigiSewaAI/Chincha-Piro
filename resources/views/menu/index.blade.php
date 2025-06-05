@@ -6,6 +6,7 @@
     <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
         हाम्रा विविध नेपाली पकवानहरूको स्वाद लिनुहोस् - ताजा, स्वादिष्ट र स्वस्थ।
     </p>
+
     <!-- Filter Buttons -->
     <div class="flex flex-wrap justify-center gap-4 mb-10">
         <button onclick="filterMenu('all')" class="filter-btn active" aria-pressed="true">सबै पकवान</button>
@@ -20,192 +21,121 @@
             </button>
         @endforeach
     </div>
+
     <!-- Menu Grid -->
     <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         @forelse($menus as $menu)
-        <div class="menu-item" data-category="{{ $menu->category_id }}" itemscope itemtype="https://schema.org/FoodEstablishment">
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:scale-105 transition-transform duration-300">
-                <div class="h-48 bg-gray-100 relative overflow-hidden">
-                    <img
-                        src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}"
-                        alt="{{ $menu->name }}"
-                        loading="lazy"
-                        itemprop="image"
-                        class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                        onerror="this.onerror=null;this.src='{{ asset('images/placeholder.png') }}';"
-                    >
-                    @if($menu->is_featured)
-                        <span class="absolute top-3 right-3 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">FEATURED</span>
-                    @endif
-                </div>
-                <div class="p-6 flex-grow flex flex-col">
-                    <div class="text-sm text-gray-500 mb-1">{{ $menu->category->name }}</div>
-                    <h2 class="text-xl font-semibold text-gray-800 mb-2" itemprop="name">{{ $menu->name }}</h2>
-                    <p class="text-gray-600 mb-4 line-clamp-2">{{ $menu->description }}</p>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-xl font-bold text-red-600" itemprop="price">रु {{ number_format($menu->price, 2) }}</span>
-                        <span class="text-sm text-green-600 font-medium">उपलब्ध</span>
+            <div class="menu-item animate-fadeIn" data-category="{{ $menu->category_id }}" itemscope itemtype="https://schema.org/FoodEstablishment">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:scale-105 transition-transform duration-300">
+                    <div class="h-48 bg-gray-100 relative overflow-hidden">
+                        <img
+                            src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}"
+                            alt="{{ $menu->name }}"
+                            loading="lazy"
+                            itemprop="image"
+                            class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                            onerror="this.onerror=null;this.src='{{ asset('images/placeholder.png') }}';"
+                        >
+                        @if($menu->is_featured)
+                            <span class="absolute top-3 right-3 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">FEATURED</span>
+                        @endif
                     </div>
-                    <button
-                        class="order-now w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                        data-id="{{ $menu->id }}"
-                        data-price="{{ $menu->price }}"
-                        aria-label="कार्टमा थप्नुहोस् {{ $menu->name }}"
-                    >
-                        कार्टमा थप्नुहोस्
-                    </button>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <div class="text-sm text-gray-500 mb-1">{{ $menu->category->name }}</div>
+                        <h2 class="text-xl font-semibold text-gray-800 mb-2" itemprop="name">{{ $menu->name }}</h2>
+                        <p class="text-gray-600 mb-4 line-clamp-2">{{ $menu->description }}</p>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xl font-bold text-red-600" itemprop="price">रु {{ number_format($menu->price, 2) }}</span>
+                            <span class="text-sm text-green-600 font-medium">उपलब्ध: {{ $menu->stock }}</span>
+                        </div>
+
+                        <!-- ✅ सही बटन (AJAX सँग समायोजित) -->
+                        <button
+                            class="order-now w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                            data-id="{{ $menu->id }}"
+                            data-price="{{ $menu->price }}"
+                            data-stock="{{ $menu->stock }}"
+                        >
+                            कार्टमा थप्नुहोस्
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
         @empty
-        <div class="col-span-full text-center py-20">
-            <p class="text-xl text-gray-500">कुनै पनि पकवान भेटिएन।</p>
-        </div>
+            <div class="col-span-full text-center py-20">
+                <p class="text-xl text-gray-500">कुनै पनि पकवान भेटिएन।</p>
+            </div>
         @endforelse
     </div>
+
     <!-- Pagination -->
     <div class="mt-12">
         {{ $menus->links('pagination::bootstrap-5') }}
     </div>
 </div>
-<!-- Shared Order Modal -->
-<div
-    id="orderModal"
-    class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4"
-    role="dialog"
-    aria-labelledby="orderModalLabel"
-    aria-hidden="true"
-    tabindex="-1"
->
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative animate-fadeIn" id="modal-content">
-        <button
-            onclick="toggleModal('orderModal')"
-            class="absolute top-4 right-4 text-gray-600 text-2xl hover:text-black"
-            aria-label="मोडल बन्द गर्नुहोस्"
-        >
-            &times;
-        </button>
-        <h3 id="orderModalLabel" class="text-2xl font-bold text-gray-800 mb-4">
-            अर्डर गर्नुहोस्
-        </h3>
-        <form id="order-form" method="POST">
-            @csrf
-            <input type="hidden" name="menu_id" id="modal-menu-id">
-            <div class="mb-4">
-                <label for="customer_name" class="block text-gray-700 mb-2">ग्राहकको नाम</label>
-                <input type="text" name="customer_name" required id="customer_name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
-                @error('customer_name')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            <div class="mb-4">
-                <label for="phone" class="block text-gray-700 mb-2">फोन नम्बर</label>
-                <input type="tel" name="phone" id="phone" required pattern="98\d{8}|97\d{8}" placeholder="98XXXXXXXX" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
-                <small class="text-gray-500">उदाहरण: 9841234567</small>
-                @error('phone')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            <div class="mb-4">
-                <label for="address" class="block text-gray-700 mb-2">ठेगाना</label>
-                <textarea name="address" id="address" required rows="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
-                @error('address')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-            <div class="mb-4">
-                <label for="special_instructions" class="block text-gray-700 mb-2">विशेष निर्देश (वैकल्पिक)</label>
-                <textarea name="special_instructions" id="special_instructions" rows="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"></textarea>
-            </div>
-            <div class="mb-4">
-                <label for="quantity" class="block text-gray-700 mb-2">मात्रा</label>
-                <input type="number" name="quantity" id="quantity" min="1" max="20" value="1" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500">
-            </div>
-            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                अर्डर पुष्टि गर्नुहोस्
-            </button>
-        </form>
-    </div>
-</div>
 @endsection
+
 @push('scripts')
 <script>
-    // AJAX: कार्टमा आइटम थप्ने
-    $('.order-now').click(function(e) {
-        e.preventDefault();
-        const itemId = $(this).data('id');
-        const expectedPrice = $(this).data('price');
+    // 🛒 Order Now बटनको AJAX प्रतिक्रिया
+    $(document).ready(function () {
+        $('.order-now').on('click', function(e) {
+            e.preventDefault(); // 🚫 पृष्ठ रिफ्रेस रोक्नुहोस्
 
-        $.ajax({
-            url: '/cart/add/' + itemId,
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}',
-                quantity: 1,
-                expected_price: expectedPrice
-            },
-            success: function(response) {
-                $('#cart-count').text(response.cart_count);
+            const itemId = $(this).data('id');
+            const expectedPrice = $(this).data('price');
+            const maxStock = $(this).data('stock');
 
+            // 📉 स्टक जाँच (साइडमा स्टक प्रदर्शन गर्नुहोस्)
+            if (maxStock <= 0) {
                 Toastify({
-                    text: response.success,
+                    text: "यो आइटम उपलब्ध छैन",
                     duration: 3000,
-                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                    backgroundColor: "linear-gradient(to right, #ff416c, #ff4b2b)"
                 }).showToast();
-            },
-            error: function(xhr) {
-                Toastify({
-                    text: "त्रुटि: " + xhr.responseJSON?.error || "कार्टमा आइटम थप्न असफल",
-                    duration: 3000,
-                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
-                }).showToast();
+                return;
             }
+
+            $.ajax({
+                url: "{{ route('cart.add', '') }}/" + itemId,
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    quantity: 1,
+                    expected_price: expectedPrice
+                },
+                success: function(response) {
+                    $('#cart-count').text(response.cart_count); // 📦 कार्टको संख्या अपडेट
+                    Toastify({
+                        text: response.success,
+                        duration: 3000,
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+                    }).showToast();
+                },
+                error: function(xhr) {
+                    Toastify({
+                        text: xhr.responseJSON.error || 'त्रुटि भयो',
+                        duration: 3000,
+                        backgroundColor: "linear-gradient(to right, #ff416c, #ff4b2b)"
+                    }).showToast();
+                }
+            });
         });
-    });
-    // मोडल खोल्ने साझा फंक्शन
-    function toggleModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.classList.toggle('hidden');
-            modal.setAttribute('aria-hidden', modal.classList.contains('hidden'));
+
+        // 📦 प्रारम्भिक कार्टको संख्या अपडेट
+        function loadCartCount() {
+            fetch("{{ route('cart.count') }}")
+                .then(res => res.json())
+                .then(data => {
+                    $('#cart-count').text(data.count);
+                });
         }
-    }
-    // मोडलबाट फारमको URL अपडेट गर्ने
-    document.querySelectorAll('.order-now').forEach(button => {
-        button.addEventListener('click', function() {
-            const menuId = this.dataset.id;
-            document.getElementById('order-form').setAttribute('action', `/orders/${menuId}`);
-            document.getElementById('modal-menu-id').value = menuId;
-            toggleModal('orderModal');
-        });
+        loadCartCount();
+        setInterval(loadCartCount, 5000); // 🕒 प्रत्येक 5 सेकण्डमा
     });
-    // ESC बटनले मोडल बन्द गर्ने
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            toggleModal('orderModal');
-        }
-    });
-    // फिल्टर कार्य
-    document.addEventListener('DOMContentLoaded', () => {
-        filterMenu('all');
-    });
-    function filterMenu(categoryId) {
-        const items = document.querySelectorAll('.menu-item');
-        items.forEach(item => {
-            item.style.display = (categoryId === 'all' || item.dataset.category === categoryId) ? 'block' : 'none';
-        });
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.remove('active');
-            btn.setAttribute('aria-pressed', 'false');
-        });
-        const activeBtn = document.querySelector(`[onclick="filterMenu('${categoryId}')"]`);
-        if (activeBtn) {
-            activeBtn.classList.add('active');
-            activeBtn.setAttribute('aria-pressed', 'true');
-        }
-    }
 </script>
 @endpush
+
 @push('styles')
 <style>
     @keyframes fadeIn {
@@ -226,6 +156,9 @@
     }
     .filter-btn.active {
         @apply bg-red-600 text-white;
+    }
+    .order-now {
+        @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300;
     }
 </style>
 @endpush

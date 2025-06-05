@@ -42,11 +42,16 @@ Route::post('/translate-text', [TranslateController::class, 'translate'])->name(
 // Reservation List Page (public)
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 
-// ✅ Public Order Routes
+// ✅ Public Cart & Order Routes
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::post('/add/{id}', [CartController::class, 'addToCart'])->name('add');
+    Route::get('/count', [CartController::class, 'getCartCount'])->name('count'); // ✅ AJAX Cart Count API
+});
+
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::middleware('guest')->group(function () {
-        Route::get('/', [OrderController::class, 'create'])->name('create');
-        Route::post('/new', [OrderController::class, 'store'])->name('store');
+        Route::get('/create', [OrderController::class, 'create'])->name('create');
+        Route::post('/store', [OrderController::class, 'store'])->name('store');
     });
 
     Route::get('/list', [OrderController::class, 'publicIndex'])->name('public.index');
@@ -82,13 +87,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // User Reservations
     Route::resource('reservations', ReservationController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 
-    // ✅ Cart Routes
-    Route::get('/cart', [CartController::class, 'viewCart'])->name('cart.view');
-    Route::post('/cart/add/{id}', [CartController::class, 'addToCart'])->name('cart.add');
-    Route::put('/cart/item/{id}', [CartController::class, 'updateCart'])->name('cart.update');
-    Route::delete('/cart/item/{id}', [CartController::class, 'removeFromCart'])->name('cart.remove');
-    Route::delete('/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
-    Route::get('/cart/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    // ✅ Cart Routes (Authenticated Users)
+    Route::prefix('cart')->name('cart.')->group(function () {
+        Route::get('/', [CartController::class, 'viewCart'])->name('index'); // ✅ Single entry point
+        Route::put('/item/{id}', [CartController::class, 'updateCart'])->name('update');
+        Route::delete('/item/{id}', [CartController::class, 'removeFromCart'])->name('remove');
+        Route::delete('/clear', [CartController::class, 'clearCart'])->name('clear');
+    });
 });
 
 // ----------------------
@@ -120,4 +125,4 @@ Route::prefix('admin')
 
         // ⚙️ Site Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
-});
+    });

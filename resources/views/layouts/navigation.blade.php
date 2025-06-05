@@ -18,6 +18,23 @@
                 </div>
             </div>
 
+            <!-- Cart Count -->
+            @auth
+                <div class="hidden sm:flex sm:items-center sm:ms-6">
+                    <a href="{{ route('cart.view') }}"
+                       class="relative inline-flex items-center px-3 py-2 text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition ease-in-out duration-150">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        @if($cartCount ?? 0 > 0)
+                            <span class="ml-1 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ $cartCount ?? 0 }}
+                            </span>
+                        @endif
+                    </a>
+                </div>
+            @endauth
+
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
@@ -71,6 +88,25 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
         </div>
+
+        <!-- Responsive Cart Link -->
+        @auth
+            <div class="pt-2 pb-3 space-y-1 border-t border-gray-200 dark:border-gray-600">
+                <x-responsive-nav-link :href="route('cart.view')" :active="request()->routeIs('cart.view')">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        कार्ट
+                        @if($cartCount ?? 0 > 0)
+                            <span class="ml-auto bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ $cartCount ?? 0 }}
+                            </span>
+                        @endif
+                    </div>
+                </x-responsive-nav-link>
+            </div>
+        @endauth
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">

@@ -25,7 +25,6 @@
         .nepali-font {
             font-family: 'Noto Sans Devanagari', 'Lohit Devanagari', 'Mangal', sans-serif;
         }
-        /* कार्ट आइकन र संख्या */
         .cart-icon {
             font-size: 1.2rem;
             color: #333;
@@ -51,10 +50,10 @@
         <!-- Sidebar -->
         <aside class="sidebar-transition bg-white dark:bg-gray-800 shadow-lg z-20"
                :class="sidebarOpen ? 'w-64' : 'w-16'">
-            <!-- Sidebar Header with Logo -->
+            <!-- Sidebar Header -->
             <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
                 <div class="flex items-center space-x-2">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-17 h-20 rounded-full" />
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-16 h-16 rounded-full" />
                     <span x-show="sidebarOpen" class="text-xl font-bold text-red-600 dark:text-red-400 nepali-font">
                         चिञ्‍चा पिरो
                     </span>
@@ -103,12 +102,12 @@
                 </div>
                 <div class="flex items-center space-x-6">
                     <div class="flex space-x-4">
-                        <a href="https://facebook.com/chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-blue-600"><i class="fab fa-facebook-f"></i></a>
-                        <a href="https://instagram.com/chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-pink-600"><i class="fab fa-instagram"></i></a>
-                        <a href="https://tiktok.com/@chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-gray-100"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://facebook.com/chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-blue-600"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://instagram.com/chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-pink-600"><i class="fab fa-instagram"></i></a>
+                        <a href="https://tiktok.com/@chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-gray-100"><i class="fab fa-tiktok"></i></a>
                     </div>
-                    <!-- ✅ Cart Icon -->
-                    <a href="{{ route('cart.view') }}" class="cart-icon">
+                    <!-- ✅ Corrected Cart Route -->
+                    <a href="{{ route('cart.index') }}" class="cart-icon">
                         🛒 <span id="cart-count">0</span>
                     </a>
                     <!-- 🌙 Theme Toggle -->
@@ -136,9 +135,9 @@
                         <div class="flex flex-col items-center">
                             <h3 class="nepali-font text-lg font-bold text-red-600 mb-2">सामाजिक सञ्जाल</h3>
                             <div class="flex space-x-4">
-                                <a href="https://facebook.com/chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-blue-600"><i class="fab fa-facebook-f"></i></a>
-                                <a href="https://instagram.com/chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-pink-600"><i class="fab fa-instagram"></i></a>
-                                <a href="https://tiktok.com/@chinchapiro"   target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-gray-100"><i class="fab fa-tiktok"></i></a>
+                                <a href="https://facebook.com/chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-blue-600"><i class="fab fa-facebook-f"></i></a>
+                                <a href="https://instagram.com/chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-pink-600"><i class="fab fa-instagram"></i></a>
+                                <a href="https://tiktok.com/@chinchapiro"  target="_blank" class="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-gray-100"><i class="fab fa-tiktok"></i></a>
                             </div>
                         </div>
                         <div class="text-center md:text-right">
@@ -154,8 +153,8 @@
         </div>
     </div>
     <!-- WhatsApp -->
-    <a href="https://wa.me/9779846216711"   target="_blank"
-       class="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-xl hover:scale-110">
+    <a href="https://wa.me/9779846216711"  target="_blank"
+       class="fixed bottom-5 right-5 bg-green-600 hover:bg-green-700 text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform">
         <i class="fab fa-whatsapp fa-lg"></i>
     </a>
     <!-- Scripts -->
@@ -180,12 +179,14 @@
     <script>
         $(document).ready(function () {
             // 📦 Order Now बटनको AJAX
-            $('.order-now').on('click', function() {
+            $('.order-now').on('click', function(e) {
+                e.preventDefault(); // 🚫 पृष्ठ रिफ्रेस रोक्नुहोस्
+
                 const itemId = $(this).data('id');
                 const expectedPrice = $(this).data('price');
 
                 $.ajax({
-                    url: '/cart/add/' + itemId,
+                    url: "{{ route('cart.add', '') }}/" + itemId,
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
@@ -193,10 +194,7 @@
                         expected_price: expectedPrice
                     },
                     success: function(response) {
-                        // 📦 कार्टको संख्या अपडेट गर्नुहोस्
-                        $('#cart-count').text(response.cart_count);
-
-                        // ✅ Toast सूचना
+                        $('#cart-count').text(response.cart_count); // 📦 कार्ट संख्या अपडेट
                         Toastify({
                             text: response.success,
                             duration: 3000,
@@ -213,13 +211,14 @@
                 });
             });
 
-            // 📦 प्रारम्भिक कार्टको संख्या
+            // 📦 प्रारम्भिक कार्ट संख्या अपडेट
             function loadCartCount() {
-                $.get("{{ route('cart.count') }}", function(response) {
-                    $('#cart-count').text(response.count);
-                });
+                fetch("{{ route('cart.count') }}")
+                    .then(res => res.json())
+                    .then(data => {
+                        $('#cart-count').text(data.count);
+                    });
             }
-
             loadCartCount();
             setInterval(loadCartCount, 5000); // 🕒 प्रत्येक 5 सेकण्डमा
         });
