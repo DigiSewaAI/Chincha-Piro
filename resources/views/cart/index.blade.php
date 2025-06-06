@@ -1,12 +1,14 @@
 @extends('layouts.app')
+
 @section('title', 'कार्ट - Chincha Piro')
+
 @section('content')
 <div class="container mx-auto px-4 py-12">
-    <h1 class="text-3xl font-bold text-red-600 mb-8">तपाईंको कार्ट</h1>
+    <h1 class="text-3xl font-bold text-red-600 mb-8 nepali-font">तपाईंको कार्ट</h1>
 
     <!-- कार्ट आइटमहरू -->
     <div id="cart-content">
-        @include('cart._cart_items') <!-- AJAX अपडेटका लागि partial view -->
+        @include('cart._cart_items')
     </div>
 
     <!-- सफलता सन्देश -->
@@ -41,26 +43,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: new FormData(this)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw response;
+                return response.json();
+            })
             .then(data => {
                 if (data.html) {
                     document.getElementById('cart-content').innerHTML = data.html;
                 }
                 if (data.success) {
-                    // सफलता सन्देश प्रदर्शन
                     showNotification(data.success, 'success');
                 }
                 if (data.error) {
-                    // त्रुटि सन्देश प्रदर्शन
                     showNotification(data.error, 'error');
                 }
+                if (data.cart_count !== undefined) {
+                    document.getElementById('cart-count').textContent = data.cart_count;
+                }
             })
-            .catch(error => {
+            .catch(async (error) => {
                 console.error('AJAX Error:', error);
-                showNotification('त्रुटि भयो', 'error');
+                let errorMessage = 'त्रुटि भयो';
+
+                try {
+                    // प्रतिक्रियाको लेख सन्देश लिनुहोस्
+                    const text = await error.text();
+
+                    try {
+                        // JSON प्रतिक्रियाबाट सन्देश लिनुहोस्
+                        const data = JSON.parse(text);
+                        errorMessage = data.error || data.message || errorMessage;
+                    } catch {
+                        // JSON होइन भने सामान्य लेख प्रतिक्रिया लिनुहोस्
+                        errorMessage = text.slice(0, 100); // पहिलो 100 अक्षर सम्म
+                    }
+                } catch {
+                    // प्रतिक्रिया पढ्न असफल
+                    errorMessage = 'नेटवर्क त्रुटि: प्रतिक्रिया पढ्न सकिएन';
+                }
+
+                showNotification(errorMessage, 'error');
             })
             .finally(() => {
-                // बटन पुनः सक्षम गर्नुहोस्
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalText;
             });
@@ -69,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // AJAX मार्फत कार्ट सफा गर्ने
     document.querySelectorAll('.clear-cart-btn').forEach(btn => {
-        btn.addEventListener('click', function (e) {
+        btn.addEventListener('click', async function (e) {
             e.preventDefault();
             if (!confirm('के तपाईं कार्ट सफा गर्न निश्चित हुनुहुन्छ?')) return;
 
@@ -77,31 +101,52 @@ document.addEventListener('DOMContentLoaded', function () {
             this.disabled = true;
             this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> कृपया प्रतीक्षा गर्नुहोस्...';
 
-            fetch(this.closest('form').action, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+                const response = await fetch(this.closest('form').action, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) throw response;
+
+                const data = await response.json();
+
                 if (data.html) {
                     document.getElementById('cart-content').innerHTML = data.html;
                 }
                 if (data.success) {
                     showNotification(data.success, 'success');
                 }
-            })
-            .catch(error => {
+                if (data.cart_count !== undefined) {
+                    document.getElementById('cart-count').textContent = data.cart_count;
+                }
+            } catch (error) {
                 console.error('AJAX Error:', error);
-                showNotification('त्रुटि भयो', 'error');
-            })
-            .finally(() => {
+                let errorMessage = 'त्रुटि भयो';
+
+                try {
+                    // JSON वा लेख प्रतिक्रिया लिनुहोस्
+                    const text = await error.text();
+
+                    try {
+                        const data = JSON.parse(text);
+                        errorMessage = data.error || data.message || errorMessage;
+                    } catch {
+                        errorMessage = text.slice(0, 100) || errorMessage;
+                    }
+                } catch {
+                    errorMessage = 'नेटवर्क त्रुटि: प्रतिक्रिया पढ्न सकिएन';
+                }
+
+                showNotification(errorMessage, 'error');
+            } finally {
                 this.disabled = false;
                 this.innerHTML = originalText;
-            });
+            }
         });
     });
 
@@ -126,6 +171,21 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
+
+    // 📦 प्रारम्भिक कार्ट संख्या अपडेट
+    function loadCartCount() {
+        fetch("{{ route('cart.count') }}")
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById('cart-count');
+                if (el) el.textContent = data.count;
+            })
+            .catch(err => {
+                console.error("Cart count load error:", err);
+            });
+    }
+    loadCartCount();
+    setInterval(loadCartCount, 5000);
 });
 </script>
 @endpush
@@ -156,6 +216,9 @@ document.addEventListener('DOMContentLoaded', function () {
         .sticky-top {
             position: static;
         }
+    }
+    .nepali-font {
+        font-family: 'Noto Sans Devanagari', 'Preeti', sans-serif;
     }
 </style>
 @endpush

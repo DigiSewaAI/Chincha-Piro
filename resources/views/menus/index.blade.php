@@ -1,22 +1,19 @@
 @extends('layouts.app')
+
 @section('title', 'मेनु - Chincha Piro')
+
 @section('content')
 <div class="container mx-auto px-4 py-12">
-    <h1 class="text-4xl md:text-5xl font-bold text-center text-red-600 mb-6">हाम्रो मेनु</h1>
-    <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+    <h1 class="text-4xl md:text-5xl font-bold text-center text-red-600 mb-6 nepali-font">हाम्रो मेनु</h1>
+    <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto nepali-font">
         हाम्रा विविध नेपाली पकवानहरूको स्वाद लिनुहोस् - ताजा, स्वादिष्ट र स्वस्थ।
     </p>
 
     <!-- Filter Buttons -->
-    <div class="flex flex-wrap justify-center gap-4 mb-10">
-        <button onclick="filterMenu('all')" class="filter-btn active" aria-pressed="true">सबै पकवान</button>
+    <div class="flex flex-wrap justify-center gap-4 mb-10" id="category-filters">
+        <button onclick="filterMenu('all')" class="filter-btn active">सबै पकवान</button>
         @foreach($categories as $category)
-            <button
-                onclick="filterMenu('{{ $category->id }}')"
-                class="filter-btn"
-                aria-label="फिल्टर गर्नुहोस्: {{ $category->name }}"
-                aria-pressed="false"
-            >
+            <button onclick="filterMenu('{{ $category->id }}')" class="filter-btn">
                 {{ $category->name }}
             </button>
         @endforeach
@@ -25,47 +22,41 @@
     <!-- Menu Grid -->
     <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         @forelse($menus as $menu)
-            <div class="menu-item animate-fadeIn" data-category="{{ $menu->category_id }}" itemscope itemtype="https://schema.org/FoodEstablishment">
+            <div class="menu-item" data-category="{{ $menu->category_id }}">
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full hover:shadow-xl hover:scale-105 transition-transform duration-300">
                     <div class="h-48 bg-gray-100 relative overflow-hidden">
-                        <img
-                            src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}"
-                            alt="{{ $menu->name }}"
-                            loading="lazy"
-                            itemprop="image"
-                            class="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                            onerror="this.onerror=null;this.src='{{ asset('images/placeholder.png') }}';"
-                        >
+                        <img src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}" alt="{{ $menu->name }}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
                         @if($menu->is_featured)
                             <span class="absolute top-3 right-3 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">FEATURED</span>
                         @endif
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
-                        <div class="text-sm text-gray-500 mb-1">{{ $menu->category->name }}</div>
-                        <h2 class="text-xl font-semibold text-gray-800 mb-2" itemprop="name">{{ $menu->name }}</h2>
-                        <p class="text-gray-600 mb-4 line-clamp-2">{{ $menu->description }}</p>
+                        <div class="text-sm text-gray-500 mb-1 nepali-font">{{ $menu->category?->name ?? 'Uncategorized' }}</div>
+                        <h2 class="text-xl font-semibold nepali-font text-gray-800">{{ $menu->name }}</h2>
+                        <p class="text-gray-600 nepali-font">{{ $menu->description }}</p>
                         <div class="flex justify-between items-center mb-4">
-                            <span class="text-xl font-bold text-red-600" itemprop="price">रु {{ number_format($menu->price, 2) }}</span>
-                            <span class="text-sm text-green-600 font-medium">उपलब्ध: {{ $menu->stock }}</span>
+                            <span class="text-xl font-bold text-red-600 nepali-font">रु {{ number_format($menu->price, 2) }}</span>
+                            <span class="text-sm text-green-600 font-medium nepali-font">उपलब्ध: {{ $menu->stock }}</span>
                         </div>
 
-                        <!-- ✅ "Add to Cart" Button with Quantity -->
-                        <div class="flex items-center gap-2">
-                            <input type="number" min="1" max="{{ $menu->stock }}" value="1" class="quantity-input w-16 px-2 py-1 border rounded" data-id="{{ $menu->id }}">
-                            <button
-                                class="order-now flex-1"
-                                data-id="{{ $menu->id }}"
-                                data-stock="{{ $menu->stock }}"
-                            >
-                                कार्टमा थप्नुहोस्
-                            </button>
-                        </div>
+                        <!-- Add to Cart Form -->
+                        <form class="add-to-cart-form" data-id="{{ $menu->id }}" data-price="{{ $menu->price }}">
+                            @csrf
+                            <input type="hidden" name="item_id" value="{{ $menu->id }}">
+                            <input type="hidden" name="expected_price" value="{{ $menu->price }}">
+                            <div class="flex items-center gap-2">
+                                <input type="number" name="quantity" min="1" max="{{ $menu->stock }}" value="1" class="quantity-input" />
+                                <button type="submit" class="order-now bg-red-600 text-white font-bold py-2 px-4 rounded-full nepali-font hover:bg-red-700 transition-all">
+                                    <i class="fas fa-shopping-cart"></i> कार्टमा थप्नुहोस्
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         @empty
             <div class="col-span-full text-center py-20">
-                <p class="text-xl text-gray-500">कुनै पनि पकवान भेटिएन।</p>
+                <p class="text-xl text-gray-500 nepali-font">कुनै पनि पकवान भेटिएन।</p>
             </div>
         @endforelse
     </div>
@@ -79,111 +70,149 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // AJAX Add to Cart
-        document.querySelectorAll('.order-now').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
-                const id = this.dataset.id;
-                const stock = parseInt(this.dataset.stock);
-                const quantityInput = document.querySelector(`.quantity-input[data-id="${id}"]`);
-                const quantity = parseInt(quantityInput.value) || 1;
+document.addEventListener('DOMContentLoaded', function () {
+    // Add to Cart Handler
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-                if (quantity > stock) {
-                    showToast("उत्तिकै स्टक छैन", "error");
-                    return;
-                }
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> कृपया प्रतीक्षा गर्नुहोस्...`;
 
-                fetch(`{{ route('cart.add', '') }}/${id}`, {
-                    method: 'POST',
+            const itemId = form.dataset.id;
+            const expectedPrice = parseFloat(form.dataset.price);
+            const quantityInput = form.querySelector('input[name="quantity"]');
+            const quantity = parseInt(quantityInput.value);
+
+            if (quantity > parseInt(quantityInput.max)) {
+                showToast(`अधिकतम उपलब्ध मात्रा: ${quantityInput.max}`, 'error');
+                resetBtn();
+                return;
+            }
+
+            try {
+                const response = await fetch("{{ route('cart.add') }}", {
+                    method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ quantity: quantity })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('cart-count').textContent = data.cart_count;
-                        showToast(data.success, "success");
-                    } else if (data.error) {
-                        showToast(data.error, "error");
-                    }
-                })
-                .catch(err => {
-                    console.error("Error:", err);
-                    showToast("त्रुटि भयो", "error");
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        quantity: quantity,
+                        expected_price: expectedPrice
+                    })
                 });
-            });
-        });
+                const data = await response.json();
 
-        // Load cart count on page load and every 5 sec
-        function loadCartCount() {
-            fetch("{{ route('cart.count') }}")
-                .then(res => res.json())
-                .then(data => {
-                    const el = document.getElementById('cart-count');
-                    if (el) el.textContent = data.count;
-                });
-        }
-        loadCartCount();
-        setInterval(loadCartCount, 5000);
-
-        // Menu Filter
-        window.filterMenu = function (categoryId) {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            document.querySelectorAll('.menu-item').forEach(item => {
-                if (categoryId === 'all' || item.dataset.category === categoryId) {
-                    item.style.display = 'block';
+                if (data.success) {
+                    document.getElementById('cart-count')?.textContent = data.cart_count;
+                    updateCartPanel(data.cart_items);
+                    showToast(data.message, 'success');
                 } else {
-                    item.style.display = 'none';
+                    showToast(data.message, 'error');
                 }
-            });
-        }
+            } catch (err) {
+                showToast("कार्टमा थप्न असफल भयो", 'error');
+                console.error(err);
+            } finally {
+                resetBtn();
+            }
 
-        // Toast Notification
-        window.showToast = function (message, type = "success") {
-            const toast = document.createElement('div');
-            toast.className = `fixed bottom-4 right-4 p-4 rounded shadow-lg z-50 ${
-                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
+            function resetBtn() {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
     });
+
+    // Cart Panel Update
+    function updateCartPanel(items) {
+        const container = document.getElementById('cart-items-container');
+        if (!container) return;
+
+        if (items.length > 0) {
+            container.innerHTML = items.map(item => `
+                <div class="cart-item flex justify-between items-center p-2 border-b">
+                    <span class="nepali-font">${item.name}</span>
+                    <span class="nepali-font">${item.quantity} x रु${item.price.toFixed(2)}</span>
+                    <span class="font-bold nepali-font">रु${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = `<p class="text-center nepali-font">तपाईंको कार्ट खाली छ।</p>`;
+        }
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded shadow-lg z-50 text-white transition-all duration-300 transform ${
+            type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`;
+        toast.innerHTML = `<div class="flex items-center gap-2">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            <span>${message}</span>
+        </div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Load Cart Count
+    function loadCartCount() {
+        fetch("{{ route('cart.count') }}")
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById('cart-count');
+                if (el) el.textContent = data.count;
+            });
+    }
+    loadCartCount();
+    setInterval(loadCartCount, 10000);
+
+    // Menu Filter
+    window.filterMenu = function(categoryId) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('onclick')?.includes(categoryId)) {
+                btn.classList.add('active');
+            }
+        });
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.style.display = (categoryId === 'all' || item.dataset.category === categoryId) ? 'block' : 'none';
+        });
+    };
+});
 </script>
 @endpush
 
 @push('styles')
 <style>
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fadeIn {
-        animation: fadeIn 0.3s ease-out;
-    }
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .filter-btn {
-        @apply px-4 py-2 rounded-full text-sm font-medium border border-red-600 text-red-600 hover:bg-red-100 transition-colors;
-    }
-    .filter-btn.active {
-        @apply bg-red-600 text-white;
-    }
-    .order-now {
-        @apply bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300;
+    .nepali-font {
+        font-family: 'Noto Sans Devanagari', 'Preeti', sans-serif;
     }
     .quantity-input {
-        @apply border border-gray-300 rounded px-2 py-1 text-center;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 8px;
+        width: 60px;
+        text-align: center;
+    }
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        background-color: #f3f4f6;
+        transition: all 0.3s;
+    }
+    .filter-btn.active {
+        background-color: #dc2626;
+        color: white;
     }
 </style>
 @endpush

@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cart;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\DB;
 
 class AdminCartController extends Controller
@@ -13,33 +15,25 @@ class AdminCartController extends Controller
      */
     public function index(Request $request)
     {
-        // 🔍 खोजी र फिल्टरिङ्ग
-        $query = Cart::with(['items.menu', 'user'])
-                    ->withCount('items');
+        $query = Cart::with(['items.menu', 'user'])->withCount('items');
 
-        // 🔎 प्रयोगकर्ता द्वारा फिल्टर
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->input('user_id'));
         }
 
-        // 📆 मिति द्वारा फिल्टर
         if ($request->filled('date')) {
             $query->whereDate('updated_at', $request->input('date'));
         }
 
-        // 📊 कार्ट अवस्था द्वारा फिल्टर (खाली/गैर-खाली)
         if ($request->filled('status')) {
             $query->has('items', $request->input('status') === 'empty' ? '=' : '>', 0);
         }
 
-        // 📅 नवीनतम कार्ट पहिले
         $query->latest();
 
-        // 📄 पृष्ठीकरण
         $perPage = $request->input('per_page', 10);
         $carts = $query->paginate($perPage)->appends($request->query());
 
-        // 📋 कार्ट सारांश सांख्यिकीय
         $stats = [
             'total_carts' => Cart::count(),
             'active_carts' => Cart::has('items', '>', 0)->count(),
@@ -56,16 +50,8 @@ class AdminCartController extends Controller
      */
     public function show($id)
     {
-        $cart = Cart::with([
-                'items.menu',
-                'user',
-                'items' => function($q) {
-                    $q->withSum('menu as total_price', 'price * quantity');
-                }
-            ])
-            ->findOrFail($id);
+        $cart = Cart::with(['items.menu', 'user'])->findOrFail($id);
 
-        // 📊 कार्ट विश्लेषण
         $analysis = [
             'item_count' => $cart->items->sum('quantity'),
             'total_value' => $cart->items->sum(fn($i) => $i->price * $i->quantity),
@@ -83,19 +69,16 @@ class AdminCartController extends Controller
     {
         $query = Cart::with(['items.menu', 'user']);
 
-        // 📆 मिति फिल्टर
         if ($request->filled('date')) {
             $query->whereDate('updated_at', $request->input('date'));
         }
 
-        // 👤 प्रयोगकर्ता फिल्टर
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->input('user_id'));
         }
 
         $carts = $query->get();
 
-        // 📋 CSV सिर्शीर्ष तैयार गर्नुहोस्
         $headers = [
             'कार्ट ID',
             'प्रयोगकर्ता',
@@ -105,7 +88,6 @@ class AdminCartController extends Controller
             'अन्तिम अपडेट',
         ];
 
-        // 📄 CSV डाटा तैयार गर्नुहोस्
         $csvData = $carts->map(function ($cart) {
             return [
                 $cart->id,
@@ -117,31 +99,29 @@ class AdminCartController extends Controller
             ];
         });
 
-        // 📥 CSV फाइल डाउनलोड गर्नुहोस्
         return response()->streamDownload(function () use ($headers, $csvData) {
             $handle = fopen('php://output', 'w');
-            fwrite($handle, "\xEF\xBB\xBF"); // 🔤 UTF-8 BOM
+            fwrite($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
             fputcsv($handle, $headers);
             foreach ($csvData as $row) {
                 fputcsv($handle, $row);
             }
             fclose($handle);
-        }, 'कार्ट_गतिविधि_' . now()->format('Y-m-d') . '.csv');
+        }, 'cart_export_' . now()->format('Y-m-d') . '.csv');
     }
 
     /**
-     * 🧹 कार्ट मेमोरी सफा गर्नुहोस्
+     * 🧹 पुराना कार्टहरू सफा गर्नुहोस्
      */
     public function clearOldCarts()
     {
-        // 🕒 7 दिन भन्दा पुराना कार्टहरू सफा गर्नुहोस्
         $deleted = Cart::where('updated_at', '<', now()->subDays(7))->delete();
 
         return back()->with('success', "$deleted पुराना कार्टहरू सफा गरियो");
     }
 
     /**
-     * 📊 कार्ट विश्लेषण डेस्कटप डेटा
+     * 📊 ड्यासबोर्ड तथ्यांक
      */
     public function dashboard()
     {
@@ -151,10 +131,12 @@ class AdminCartController extends Controller
             'empty_carts' => Cart::has('items', '=', 0)->count(),
             'total_items' => CartItem::sum('quantity'),
             'avg_items_per_cart' => round(CartItem::count() / max(1, Cart::count()), 2),
-            'total_value' => number_format(CartItem::sum(fn($i) => $i->price * $i->quantity), 2),
+            'total_value' => number_format(
+                CartItem::all()->sum(fn($i) => $i->price * $i->quantity), 2
+            ),
             'daily_average' => number_format(
                 CartItem::where('created_at', '>=', now()->startOfDay())
-                    ->sum(fn($i) => $i->price * $i->quantity), 2
+                    ->get()->sum(fn($i) => $i->price * $i->quantity), 2
             )
         ];
 

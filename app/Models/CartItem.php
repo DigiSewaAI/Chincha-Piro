@@ -14,10 +14,10 @@ class CartItem extends Model
      */
     protected $fillable = [
         'cart_id',
-        'menu_id',
+        'food_id', // मेनुको सट्टा फूडको आईडी
         'quantity',
         'price',
-        'extras',
+        'extras', // JSON data (उदाहरण: toppings, notes)
     ];
 
     /**
@@ -26,30 +26,30 @@ class CartItem extends Model
     protected $casts = [
         'quantity' => 'integer',
         'price'    => 'float',
-        'extras'   => 'array', // JSON data, e.g., toppings, notes
+        'extras'   => 'array', // JSON data को लागि
     ];
 
     /**
      * Relationships
      */
 
-    // Cart relationship
+    // कार्ट सम्बन्ध
     public function cart()
     {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(\App\Models\Cart::class);
     }
 
-    // Menu item relationship
-    public function menu()
+    // फूड सम्बन्ध
+    public function food()
     {
-        return $this->belongsTo(Menu::class);
+        return $this->belongsTo(\App\Models\Food::class);
     }
 
     /**
      * Accessors
      */
 
-    // Total price of this cart item (quantity × unit price)
+    // यस कार्ट आइटमको कुल मूल्य (मात्रा × एकाइ मूल्य)
     public function getTotalPriceAttribute(): float
     {
         return $this->quantity * $this->price;

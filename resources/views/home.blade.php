@@ -33,12 +33,18 @@
         <div class="relative h-96 overflow-hidden">
           <img src="{{ $menu->image ? asset('storage/' . $menu->image) : asset('images/placeholder.png') }}" class="w-full h-full object-cover" alt="{{ $menu->name }}">
           <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-            <form action="{{ route('cart.add', $menu->id) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-2">
-              @csrf
-              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded">
-              <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded-full nepali-font text-md hover:bg-red-700 transition-all flex items-center justify-center gap-2">
-                कार्टमा थप्नुहोस्
-              </button>
+            <!-- ✅ Quantity Form -->
+            <form class="add-to-cart-form" data-id="{{ $menu->id }}" data-price="{{ $menu->price }}">
+                @csrf
+                <div class="flex items-center gap-2">
+                    <input type="number" name="quantity" min="1" max="{{ $menu->stock }}" value="1" class="quantity-input w-16 px-2 py-1 border rounded">
+                    <button
+                        type="submit"
+                        class="order-now flex-1 bg-red-600 text-white font-bold py-2 px-4 rounded-full nepali-font text-md hover:bg-red-700 transition-all"
+                    >
+                        <i class="fas fa-shopping-cart me-2"></i> कार्टमा थप्नुहोस्
+                    </button>
+                </div>
             </form>
           </div>
         </div>
@@ -74,12 +80,18 @@
         <div class="relative h-96 overflow-hidden">
           <img src="{{ $dish->image ? Storage::url($dish->image) : asset('images/placeholder.png') }}" alt="{{ $dish->name }}" class="w-full h-full object-cover">
           <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-            <form action="{{ route('cart.add', $dish->id) }}" method="POST" class="flex flex-col sm:flex-row items-center gap-2">
-              @csrf
-              <input type="number" name="quantity" value="1" min="1" class="w-16 text-center bg-gray-800 text-white rounded">
-              <button type="submit" class="w-full bg-red-600 text-white px-4 py-2 rounded-full nepali-font text-md hover:bg-red-700 transition-all flex items-center justify-center gap-2">
-                कार्टमा थप्नुहोस्
-              </button>
+            <!-- ✅ Quantity Form -->
+            <form class="add-to-cart-form" data-id="{{ $dish->id }}" data-price="{{ $dish->price }}">
+                @csrf
+                <div class="flex items-center gap-2">
+                    <input type="number" name="quantity" min="1" max="{{ $dish->stock }}" value="1" class="quantity-input w-16 px-2 py-1 border rounded">
+                    <button
+                        type="submit"
+                        class="order-now flex-1 bg-red-600 text-white font-bold py-2 px-4 rounded-full nepali-font text-md hover:bg-red-700 transition-all"
+                    >
+                        <i class="fas fa-shopping-cart me-2"></i> कार्टमा थप्नुहोस्
+                    </button>
+                </div>
             </form>
           </div>
         </div>
@@ -120,5 +132,127 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  .quantity-input {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 8px;
+    width: 60px;
+    text-align: center;
+  }
 </style>
+@endpush
+
+@push('scripts')
+<!-- Toastify CDN -->
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // ✅ Unified Add-to-Cart handler
+    document.querySelectorAll('.add-to-cart-form').forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> कृपया प्रतीक्षा गर्नुहोस्...';
+
+            const itemId = this.dataset.id;
+            const expectedPrice = parseFloat(this.dataset.price);
+            const quantityInput = this.querySelector('.quantity-input');
+            const quantity = parseInt(quantityInput.value) || 1;
+
+            if (quantity > parseInt(quantityInput.max)) {
+                showToast(`अधिकतम उपलब्ध मात्रा: ${quantityInput.max}`, 'error');
+                resetButton();
+                return;
+            }
+
+            try {
+                const response = await fetch("{{ route('cart.add') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        item_id: itemId,
+                        quantity: quantity,
+                        expected_price: expectedPrice
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('cart-count')?.textContent = data.cart_count;
+                    showToast(data.message, 'success');
+                    updateCartPanel(data.cart_items);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                console.error('AJAX Error:', error);
+                showToast('कार्टमा आइटम थप्न असफल', 'error');
+            } finally {
+                resetButton();
+            }
+
+            function resetButton() {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
+    });
+
+    // ✅ Cart Panel Update
+    function updateCartPanel(items) {
+        const container = document.getElementById('cart-items-container');
+        if (!container) return;
+
+        if (items.length > 0) {
+            container.innerHTML = items.map(item => `
+                <div class="cart-item flex justify-between items-center p-2 border-b">
+                    <span class="nepali-font">${item.name}</span>
+                    <span class="nepali-font">${item.quantity} x ₹${item.price.toFixed(2)}</span>
+                    <span class="font-bold nepali-font">₹${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="text-center nepali-font">तपाईँको कार्ट खाली छ</p>';
+        }
+    }
+
+    // ✅ Toast Notification
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded shadow-lg z-50 transition-all duration-300 transform ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        } text-white`;
+        toast.innerHTML = `<div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+        </div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // ✅ Live Cart Count
+    function loadCartCount() {
+        fetch("{{ route('cart.count') }}")
+            .then(res => res.json())
+            .then(data => {
+                const el = document.getElementById('cart-count');
+                if (el) el.textContent = data.count;
+            });
+    }
+    loadCartCount();
+    setInterval(loadCartCount, 10000);
+});
+</script>
 @endpush

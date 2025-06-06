@@ -13,47 +13,54 @@ use App\Http\Controllers\{
     TranslateController,
     MenuController,
     CartController,
+    Admin\CartController as AdminCartController,
+    Admin\MenuController as AdminMenuController,
 };
-use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 
 // ------------------
-// 🔓 Public Routes (Web Middleware सँग)
+// 🔓 Public Routes
 // ------------------
 
+// 🏠 Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// ✅ Public Menu Routes
+// 🍽️ Public Menu
 Route::prefix('menu')->name('menu.')->group(function () {
     Route::get('/', [MenuController::class, 'publicMenu'])->name('index');
     Route::get('/{id}', [MenuController::class, 'show'])->name('show');
 });
 
-// Public Gallery & Static Pages
+// 🖼️ Public Gallery & Static Pages
 Route::get('/gallery', [GalleryController::class, 'publicIndex'])->name('gallery.public');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/services', [HomeController::class, 'services'])->name('services');
 
-// Contact Page
+// 📞 Contact Page
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
-// Translation Page
+// 🌐 Translation Page
 Route::get('/translate', [TranslateController::class, 'show'])->name('translate');
 Route::post('/translate-text', [TranslateController::class, 'translate'])->name('translate.text');
 
-// Reservation List Page (public)
+// 📅 Public Reservation Routes
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
 
-// ✅ Public Cart Routes (Web Middleware सँग)
+// 🛒 Public Cart Routes
 Route::prefix('cart')->name('cart.')->group(function () {
-    // AJAX: Add to Cart (POST)
-    Route::post('/add', [CartController::class, 'addToCart'])->name('add');
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::get('/count', [CartController::class, 'count'])->name('count');
 
-    // AJAX: Cart Count (GET)
-    Route::get('/count', [CartController::class, 'getCount'])->name('count');
+    // AJAX-only routes for cart
+    Route::middleware(['ajax'])->group(function () {
+        Route::post('/add', [CartController::class, 'add'])->name('add');
+        Route::put('/item/{id}', [CartController::class, 'update'])->name('update');
+        Route::delete('/item/{id}', [CartController::class, 'remove'])->name('remove');
+        Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+    });
 });
 
-// Public Orders
+// 🧾 Public Order Routes
 Route::prefix('orders')->name('orders.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('/create', [OrderController::class, 'create'])->name('create');
@@ -68,55 +75,41 @@ Route::prefix('orders')->name('orders.')->group(function () {
 // ----------------------
 // 🔐 Auth Routes
 // ----------------------
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ----------------------
 // 👤 Authenticated User Routes
 // ----------------------
-
 Route::middleware(['auth', 'verified'])->group(function () {
+    // 🏠 User Dashboard
     Route::get('/dashboard', [DashboardController::class, 'userIndex'])->name('dashboard');
 
-    // Profile Management
+    // 👤 Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // User Orders
+    // 🧾 User Order Management
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/history', [OrderController::class, 'index'])->name('index');
         Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
         Route::get('/{order}/receipt', [OrderController::class, 'downloadReceipt'])->name('receipt');
     });
 
-    // User Reservations
-    Route::resource('reservations', ReservationController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
-
-    // ✅ Cart Routes (Authenticated Users)
-    Route::prefix('cart')->name('cart.')->group(function () {
-        // View Cart
-        Route::get('/', [CartController::class, 'index'])->name('index');
-
-        // Update Cart
-        Route::put('/item/{id}', [CartController::class, 'update'])->name('update');
-
-        // Remove Item
-        Route::delete('/item/{id}', [CartController::class, 'remove'])->name('remove');
-
-        // Clear Cart
-        Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
-    });
+    // 📅 User Reservation Management
+    Route::resource('reservations', ReservationController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 
 // ----------------------
 // 🛠️ Admin Routes
 // ----------------------
-
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', 'role:admin'])
     ->group(function () {
+
+        // 🖥️ Admin Dashboard
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
 
         // 🧾 Order Management
@@ -124,7 +117,7 @@ Route::prefix('admin')
         Route::post('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('orders/{order}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
 
-        // 🍽️ Menu Management (using Admin MenuController)
+        // 🍽️ Menu Management
         Route::resource('menu', AdminMenuController::class)->except(['show']);
 
         // 🛎️ Reservation Management
@@ -139,9 +132,9 @@ Route::prefix('admin')
         // ⚙️ Site Settings
         Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 
-        // 🛒 Cart Monitoring
+        // 🛒 Admin Cart Monitoring
         Route::prefix('carts')->name('carts.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\AdminCartController::class, 'index'])->name('index');
-            Route::get('/{id}', [\App\Http\Controllers\AdminCartController::class, 'show'])->name('show');
+            Route::get('/', [AdminCartController::class, 'index'])->name('index');
+            Route::get('/{id}', [AdminCartController::class, 'show'])->name('show');
         });
     });

@@ -13,19 +13,19 @@ class MenuController extends Controller
      */
     public function publicMenu()
     {
-        // Fetch all categories with their active menus
+        // Fetch all categories that have active menus
         $categories = Category::with(['menus' => function ($query) {
             $query->where('status', true); // Only active menus
         }])->get();
 
-        // Fetch all active menus with category relationship, ordered by latest
+        // Fetch all active menus with their category (paginated)
         $menus = Menu::with('category')
             ->where('status', true)
             ->latest()
             ->paginate(15);
 
-        // Return view with data
-        return view('menu.index', compact('categories', 'menus'));
+        // View: resources/views/menus/index.blade.php
+        return view('menus.index', compact('categories', 'menus'));
     }
 
     /**
@@ -33,13 +33,13 @@ class MenuController extends Controller
      */
     public function show($id)
     {
-        // Find the menu item by ID and ensure it's active
+        // Find active menu item by ID, or throw 404
         $menuItem = Menu::with('category')
             ->where('id', $id)
             ->where('status', true)
             ->firstOrFail();
 
-        // Return view with the menu item
-        return view('menu.show', compact('menuItem'));
+        // View: resources/views/menus/show.blade.php
+        return view('menus.show', compact('menuItem'));
     }
 }
