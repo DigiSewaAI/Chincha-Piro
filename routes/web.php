@@ -101,14 +101,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->only(['create', 'store', 'edit', 'update', 'destroy']);
 });
 
-// ----------------------
-// 🛠️ Admin Routes
-// ----------------------
+// =======================
+// Admin Routes
+// =======================
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', 'role:admin'])
     ->group(function () {
-
         // 🖥️ Admin Dashboard
         Route::get('/dashboard', [DashboardController::class, 'adminIndex'])->name('dashboard');
 
@@ -119,10 +118,6 @@ Route::prefix('admin')
 
         // 🍽️ Menu Management
         Route::resource('menu', AdminMenuController::class)->except(['show']);
-
-        // 🛎️ Reservation Management
-        Route::resource('reservations', ReservationController::class)->except(['index', 'store']);
-        Route::get('reservations/history', [ReservationController::class, 'history'])->name('reservations.history');
 
         // 🖼️ Gallery Management
         Route::resource('gallery', GalleryController::class)->except(['show']);
@@ -137,4 +132,4 @@ Route::prefix('admin')
             Route::get('/', [AdminCartController::class, 'index'])->name('index');
             Route::get('/{id}', [AdminCartController::class, 'show'])->name('show');
         });
-    });
+});

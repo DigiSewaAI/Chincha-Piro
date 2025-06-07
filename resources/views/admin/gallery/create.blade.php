@@ -122,7 +122,7 @@
 
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     const typeSelect = document.getElementById('typeSelect');
     const fileInput = document.getElementById('fileInput');
     const fileLabel = document.getElementById('fileLabel');

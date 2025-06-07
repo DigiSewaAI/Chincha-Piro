@@ -67,6 +67,7 @@ class GalleryController extends Controller
             $gallery->description = $validated['description'];
             $gallery->type = $validated['type'];
 
+<<<<<<< HEAD
             if ($validated['type'] === 'photo') {
                 $path = $request->file('file')->store('gallery/photos', 'public');
                 $gallery->file_path = $path;
@@ -81,6 +82,13 @@ class GalleryController extends Controller
 
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'त्रुटि: ' . $e->getMessage());
+=======
+        if ($request->type === 'photo') {
+            $path = $request->file('file')->store('gallery/photos', 'public');
+            $gallery->image_path = $path;
+        } else {
+            $gallery->image_path = $request->video_url;
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
         }
     }
 
@@ -107,6 +115,7 @@ class GalleryController extends Controller
             $gallery->category = $validated['category'];
             $gallery->description = $validated['description'];
 
+<<<<<<< HEAD
             if ($gallery->type === 'photo' && $request->hasFile('file')) {
                 // Delete old file
                 if ($gallery->file_path && Storage::disk('public')->exists($gallery->file_path)) {
@@ -141,6 +150,22 @@ class GalleryController extends Controller
             $gallery->delete();
 
             return back()->with('success', 'आइटम सफलतापूर्वक मेटाइयो!');
+=======
+        if ($gallery->type === 'photo' && $request->hasFile('file')) {
+            // पुरानो फाइल मेटाउनुहोस्
+            if ($gallery->image_path && Storage::disk('public')->exists($gallery->image_path)) {
+                Storage::disk('public')->delete($gallery->image_path);
+            }
+
+            // नयाँ फाइल राख्नुहोस्
+            $path = $request->file('file')->store('gallery/photos', 'public');
+            $gallery->image_path = $path;
+        }
+
+        if ($gallery->type === 'video' && $request->filled('video_url')) {
+            $gallery->image_path = $request->video_url;
+        }
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
 
         } catch (\Exception $e) {
             return back()->with('error', 'त्रुटि: ' . $e->getMessage());
@@ -159,10 +184,16 @@ class GalleryController extends Controller
     // Mark as Featured
     public function markFeatured(Gallery $gallery)
     {
+<<<<<<< HEAD
         // Unmark all others
         Gallery::where('id', '!=', $gallery->id)
                ->where('featured', true)
                ->update(['featured' => false]);
+=======
+        if ($gallery->type === 'photo' && $gallery->image_path) {
+            Storage::disk('public')->delete($gallery->image_path);
+        }
+>>>>>>> bf0c141ad1cd9b5312caa672c6a6e68455c88f46
 
         $gallery->featured = true;
         $gallery->save();

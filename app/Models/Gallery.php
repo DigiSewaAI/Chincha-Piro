@@ -78,7 +78,7 @@ class Gallery extends Model
 
         $videoId = $matches[1] ?? null;
 
-        return $videoId ? 'https://www.youtube.com/embed/' . $videoId : null;
+        return $videoId ? 'https://www.youtube.com/embed/'  . $videoId : null;
     }
 
     public function isPhoto(): bool

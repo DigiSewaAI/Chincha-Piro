@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use App\Models\Gallery;
 use Illuminate\Support\Facades\Storage;
@@ -12,38 +10,36 @@ class GalleryController extends Controller
 {
     public function __construct()
     {
+        // Only authenticated users can access these admin methods
         $this->middleware('auth')->only([
             'index', 'create', 'store', 'edit', 'update', 'destroy', 'toggleStatus', 'markFeatured'
         ]);
     }
 
     /**
-     * सार्वजनिक ग्यालरी हेर्ने view
+     * Public gallery view
      */
     public function publicIndex()
     {
-        $galleries = Gallery::where('is_active', true)->latest()->paginate(12);
-        return view('gallery.index', compact('galleries'));
+        $galleryItems = Gallery::where('is_active', true)->latest()->paginate(12);
+        return view('gallery.index', compact('galleryItems'));
     }
 
     /**
-     * एडमिनको लागि ग्यालरी व्यवस्थापन view
+     * Admin gallery management list
      */
     public function index()
     {
-        $galleries = Gallery::latest()->paginate(20);
-        return view('admin.gallery.index', compact('galleries'));
+        $galleryItems = Gallery::latest()->paginate(20);
+        return view('admin.gallery.index', compact('galleryItems'));
     }
 
     /**
-     * नयाँ आइटम अपलोड फारम
+     * Show upload form (admin only)
      */
     public function create()
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
-
+        $this->authorizeAdmin();
         return view('admin.gallery.create', [
             'gallery' => null,
             'categories' => Gallery::getCategoryOptions(),
@@ -52,29 +48,11 @@ class GalleryController extends Controller
     }
 
     /**
-     * आइटम सम्पादन फारम
-     */
-    public function edit(Gallery $gallery)
-    {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
-
-        return view('admin.gallery.create', [
-            'gallery' => $gallery,
-            'categories' => Gallery::getCategoryOptions(),
-            'types' => Gallery::getTypeOptions()
-        ]);
-    }
-
-    /**
-     * नयाँ फोटो / भिडियो save गर्ने
+     * Store new image or video
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
+        $this->authorizeAdmin();
 
         $validated = $this->validateGallery($request);
         $path = $this->handleFileUpload($request);
@@ -95,18 +73,28 @@ class GalleryController extends Controller
         }
 
         Gallery::create($data);
-
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक थपियो।');
     }
 
     /**
-     * पुरानो आइटम update गर्ने
+     * Edit existing gallery item
+     */
+    public function edit(Gallery $gallery)
+    {
+        $this->authorizeAdmin();
+        return view('admin.gallery.create', [
+            'gallery' => $gallery,
+            'categories' => Gallery::getCategoryOptions(),
+            'types' => Gallery::getTypeOptions()
+        ]);
+    }
+
+    /**
+     * Update existing gallery item
      */
     public function update(Request $request, Gallery $gallery)
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
+        $this->authorizeAdmin();
 
         $validated = $this->validateGallery($request, $gallery);
         $newPath = $this->handleFileUpload($request);
@@ -123,6 +111,9 @@ class GalleryController extends Controller
         if ($newPath !== null) {
             if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
                 Storage::disk('public')->delete($gallery->image_path);
+            } elseif ($gallery->isExternalVideo() && $gallery->video_url) {
+                // We don't delete external URLs, but we do clear the old one by updating the field
+                // No physical file to delete
             }
 
             if (in_array($validated['type'], ['photo', 'local_video'])) {
@@ -139,51 +130,42 @@ class GalleryController extends Controller
     }
 
     /**
-     * आइटमको सक्रियता टगल गर्ने
+     * Toggle item status
      */
     public function toggleStatus(Gallery $gallery)
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
-
+        $this->authorizeAdmin();
         $gallery->update(['is_active' => !$gallery->is_active]);
         return back()->with('success', 'स्टेटस सफलतापूर्वक परिवर्तन गरियो।');
     }
 
     /**
-     * आइटमलाई Featured बनाउने
+     * Mark item as featured
      */
     public function markFeatured(Gallery $gallery)
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
+        $this->authorizeAdmin();
 
         Gallery::where('category', $gallery->category)
             ->where('id', '!=', $gallery->id)
             ->update(['featured' => false]);
 
         $gallery->update(['featured' => true]);
-
         return back()->with('success', 'आइटमलाई सुविधाजनक रूपमा चिन्ह लगाइयो।');
     }
 
     /**
-     * ग्यालरी आइटम मेटाउने
+     * Delete gallery item
      */
     public function destroy(Gallery $gallery)
     {
-        if (!Auth::user()->isAdmin()) {
-            return redirect()->route('home')->with('error', 'अनधिकृत पहुँच');
-        }
+        $this->authorizeAdmin();
 
         if (($gallery->isPhoto() || $gallery->isLocalVideo()) && $gallery->image_path) {
             Storage::disk('public')->delete($gallery->image_path);
         }
 
         $gallery->delete();
-
         return redirect()->route('admin.gallery.index')->with('success', 'आइटम सफलतापूर्वक हटाइयो।');
     }
 
@@ -202,7 +184,6 @@ class GalleryController extends Controller
         ];
 
         $type = $request->input('type');
-
         if ($type === 'photo') {
             $rules['file'] = [$gallery ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,gif', 'max:20480'];
         } elseif ($type === 'local_video') {
@@ -215,7 +196,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * File upload or video URL handling
+     * Handle file upload or video URL
      */
     private function handleFileUpload(Request $request): ?string
     {
@@ -230,5 +211,15 @@ class GalleryController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Admin authorization check
+     */
+    private function authorizeAdmin()
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            abort(403, 'अनधिकृत पहुँच');
+        }
     }
 }
